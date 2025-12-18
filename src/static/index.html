@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KratorAI - Design Refiner</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #f59e0b;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-input: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #475569;
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .tagline {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        /* Main Grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Cards */
+        .card {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-title svg {
+            width: 24px;
+            height: 24px;
+            color: var(--primary);
+        }
+
+        /* Upload Zone */
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: 0.75rem;
+            padding: 3rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--bg-input);
+            margin-bottom: 1.5rem;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.dragover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .upload-zone svg {
+            width: 48px;
+            height: 48px;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .upload-zone p {
+            color: var(--text-secondary);
+        }
+
+        .upload-zone .highlight {
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* Image Preview */
+        .preview-container {
+            display: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .preview-container.active {
+            display: block;
+        }
+
+        .preview-image {
+            width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
+        }
+
+        .preview-name {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .remove-btn {
+            background: none;
+            border: none;
+            color: var(--error);
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        textarea {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 100px;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        textarea::placeholder {
+            color: var(--text-secondary);
+        }
+
+        /* Range Slider */
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            -webkit-appearance: none;
+            background: var(--bg-input);
+            border-radius: 0.25rem;
+            height: 8px;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(99, 102, 241, 0.4);
+        }
+
+        .slider-value {
+            min-width: 50px;
+            text-align: center;
+            font-weight: 500;
+            color: var(--primary);
+        }
+
+        /* Variation Count */
+        .variation-btns {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .variation-btn {
+            flex: 1;
+            padding: 0.5rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .variation-btn:hover {
+            border-color: var(--primary);
+        }
+
+        .variation-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            width: 100%;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border: none;
+            border-radius: 0.75rem;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .submit-btn.loading .btn-text {
+            display: none;
+        }
+
+        .submit-btn .spinner {
+            display: none;
+        }
+
+        .submit-btn.loading .spinner {
+            display: block;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Results Section */
+        .results-placeholder {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .results-placeholder svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .result-card {
+            background: var(--bg-input);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .result-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary);
+        }
+
+        .result-image {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+        }
+
+        .result-info {
+            padding: 1rem;
+        }
+
+        .result-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .result-meta {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Status Messages */
+        .status {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .status.visible {
+            display: block;
+        }
+
+        .status.success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .status.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--error);
+            color: var(--error);
+        }
+
+        /* Prompt Examples */
+        .examples {
+            margin-top: 0.75rem;
+        }
+
+        .examples-title {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .example-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .example-chip {
+            padding: 0.25rem 0.75rem;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid var(--primary);
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            color: var(--primary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .example-chip:hover {
+            background: var(--primary);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="logo">🎨 KratorAI</h1>
+            <p class="tagline">AI-powered design refinement for African creatives</p>
+        </header>
+
+        <div class="main-grid">
+            <!-- Upload & Settings Card -->
+            <div class="card">
+                <h2 class="card-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Upload Design
+                </h2>
+
+                <div class="upload-zone" id="uploadZone">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <p>Drag & drop your design here or <span class="highlight">browse</span></p>
+                    <p style="font-size: 0.75rem; margin-top: 0.5rem;">PNG, JPG, WEBP up to 10MB</p>
+                </div>
+                <input type="file" id="fileInput" accept="image/*">
+
+                <div class="preview-container" id="previewContainer">
+                    <img id="previewImage" class="preview-image" src="" alt="Preview">
+                    <div class="preview-name">
+                        <span id="fileName"></span>
+                        <button class="remove-btn" id="removeBtn">✕ Remove</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="prompt">Refinement Prompt</label>
+                    <textarea id="prompt" placeholder="Describe how you want to refine your design...&#10;&#10;e.g., Add vibrant Ankara patterns with gold accents"></textarea>
+                    <div class="examples">
+                        <p class="examples-title">Try these examples:</p>
+                        <div class="example-chips">
+                            <span class="example-chip" data-prompt="Add vibrant Kente-inspired patterns with gold and green accents">Kente patterns</span>
+                            <span class="example-chip" data-prompt="Infuse Lagos street art vibes with bold colors">Lagos street art</span>
+                            <span class="example-chip" data-prompt="Apply Adinkra symbols with a modern minimalist twist">Adinkra minimal</span>
+                            <span class="example-chip" data-prompt="Transform with Ankara textile patterns in sunset colors">Ankara sunset</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Refinement Strength</label>
+                    <div class="slider-container">
+                        <input type="range" id="strength" min="10" max="100" value="70">
+                        <span class="slider-value" id="strengthValue">70%</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Number of Variations</label>
+                    <div class="variation-btns">
+                        <button class="variation-btn" data-value="1">1</button>
+                        <button class="variation-btn" data-value="2">2</button>
+                        <button class="variation-btn active" data-value="3">3</button>
+                        <button class="variation-btn" data-value="4">4</button>
+                        <button class="variation-btn" data-value="5">5</button>
+                    </div>
+                </div>
+
+                <button class="submit-btn" id="submitBtn" disabled>
+                    <span class="btn-text">✨ Refine Design</span>
+                    <svg class="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+                    </svg>
+                </button>
+
+                <div class="status" id="status"></div>
+            </div>
+
+            <!-- Results Card -->
+            <div class="card">
+                <h2 class="card-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                    </svg>
+                    Generated Variations
+                </h2>
+
+                <div id="resultsContainer">
+                    <div class="results-placeholder">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <p>Upload a design and click "Refine" to see AI-generated variations here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewImage = document.getElementById('previewImage');
+        const fileName = document.getElementById('fileName');
+        const removeBtn = document.getElementById('removeBtn');
+        const prompt = document.getElementById('prompt');
+        const strength = document.getElementById('strength');
+        const strengthValue = document.getElementById('strengthValue');
+        const variationBtns = document.querySelectorAll('.variation-btn');
+        const submitBtn = document.getElementById('submitBtn');
+        const status = document.getElementById('status');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const exampleChips = document.querySelectorAll('.example-chip');
+
+        let selectedFile = null;
+        let numVariations = 3;
+
+        // Event Listeners
+        uploadZone.addEventListener('click', () => fileInput.click());
+        
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        removeBtn.addEventListener('click', () => {
+            selectedFile = null;
+            previewContainer.classList.remove('active');
+            uploadZone.style.display = 'block';
+            fileInput.value = '';
+            updateSubmitBtn();
+        });
+
+        strength.addEventListener('input', (e) => {
+            strengthValue.textContent = `${e.target.value}%`;
+        });
+
+        variationBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                variationBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                numVariations = parseInt(btn.dataset.value);
+            });
+        });
+
+        exampleChips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                prompt.value = chip.dataset.prompt;
+            });
+        });
+
+        submitBtn.addEventListener('click', handleSubmit);
+
+        // Functions
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showStatus('Please select an image file', 'error');
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                showStatus('File size must be less than 10MB', 'error');
+                return;
+            }
+
+            selectedFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImage.src = e.target.result;
+                fileName.textContent = file.name;
+                previewContainer.classList.add('active');
+                uploadZone.style.display = 'none';
+                updateSubmitBtn();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateSubmitBtn() {
+            submitBtn.disabled = !selectedFile;
+        }
+
+        function showStatus(message, type) {
+            status.textContent = message;
+            status.className = `status visible ${type}`;
+            setTimeout(() => {
+                status.classList.remove('visible');
+            }, 5000);
+        }
+
+        async function handleSubmit() {
+            if (!selectedFile) return;
+
+            submitBtn.classList.add('loading');
+            submitBtn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            formData.append('prompt', prompt.value || 'Enhance this design with vibrant African patterns');
+            formData.append('strength', strength.value / 100);
+            formData.append('num_variations', numVariations);
+
+            try {
+                const response = await fetch('/refine/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Refinement failed');
+                }
+
+                const result = await response.json();
+                displayResults(result);
+                showStatus('Refinement completed successfully!', 'success');
+
+            } catch (error) {
+                showStatus(error.message, 'error');
+            } finally {
+                submitBtn.classList.remove('loading');
+                submitBtn.disabled = false;
+            }
+        }
+
+        function displayResults(result) {
+            if (result.variations && result.variations.length > 0) {
+                let html = '<div class="results-grid">';
+                
+                result.variations.forEach((variation, index) => {
+                    html += `
+                        <div class="result-card">
+                            <img class="result-image" src="${variation.thumbnail_uri || variation.asset_uri}" alt="Variation ${index + 1}" 
+                                 onerror="this.src='https://via.placeholder.com/400x400/1e293b/6366f1?text=Variation+${index + 1}'">
+                            <div class="result-info">
+                                <div class="result-title">Variation ${index + 1}</div>
+                                <div class="result-meta">ID: ${variation.asset_id.substring(0, 8)}...</div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+                resultsContainer.innerHTML = html;
+            }
+        }
+    </script>
+</body>
+</html>
