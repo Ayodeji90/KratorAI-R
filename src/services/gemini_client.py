@@ -73,6 +73,51 @@ class GeminiClient:
             "candidates": response.candidates if hasattr(response, 'candidates') else [],
             "prompt_feedback": getattr(response, 'prompt_feedback', None),
         }
+
+    async def generate_content(
+        self,
+        parts: list,
+        generation_config: Optional[dict] = None,
+    ) -> dict:
+        """
+        Generate content from a list of parts (text, images, etc.).
+        
+        Args:
+            parts: List of content parts
+            generation_config: Optional generation parameters
+        
+        Returns:
+            Generated content with image data
+        """
+        # Generate
+        response = self.model.generate_content(
+            parts,
+            generation_config=generation_config or {},
+        )
+        
+        # Safely extract text and images from response
+        text_content = None
+        images = []
+        try:
+            if response.candidates and len(response.candidates) > 0:
+                candidate = response.candidates[0]
+                if candidate.content and candidate.content.parts:
+                    for part in candidate.content.parts:
+                        if hasattr(part, 'text') and part.text:
+                            text_content = part.text
+                        if hasattr(part, 'inline_data') and part.inline_data:
+                            img_data = part.inline_data.data
+                            img = Image.open(io.BytesIO(img_data))
+                            images.append(img)
+        except Exception:
+            pass
+        
+        return {
+            "text": text_content,
+            "images": images,
+            "candidates": response.candidates if hasattr(response, 'candidates') else [],
+            "prompt_feedback": getattr(response, 'prompt_feedback', None),
+        }
     
     async def breed_images(
         self,

@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, JSONResponse
 
 from src.config import get_settings
-from src.api.routes import breed, refine, edit, agent, describe
+from src.api.routes import breed, refine, edit, agent, describe, template
 from src.utils.logging import setup_logging, get_logger
 
 logger = get_logger(__name__)
@@ -70,6 +70,7 @@ app.include_router(refine.router, prefix="/refine", tags=["Design Refining"])
 app.include_router(edit.router, prefix="/edit", tags=["Design Editing"])
 app.include_router(agent.router, prefix="/agent", tags=["AI Agent"])
 app.include_router(describe.router, prefix="", tags=["Design Description"])
+app.include_router(template.router, prefix="/template", tags=["Template Editing"])
 
 
 @app.get("/")
