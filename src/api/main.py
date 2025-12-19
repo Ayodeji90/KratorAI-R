@@ -24,10 +24,10 @@ async def lifespan(app: FastAPI):
     settings = get_settings()
     setup_logging(level="DEBUG" if settings.debug else "INFO", json_format=not settings.debug)
     
-    logger.info(f"🚀 KratorAI Gemini API starting (debug={settings.debug})")
+    logger.info(f"KratorAI Gemini API starting (debug={settings.debug})")
     yield
     # Shutdown
-    logger.info("👋 KratorAI Gemini API shutting down")
+    logger.info("KratorAI Gemini API shutting down")
 
 
 app = FastAPI(
