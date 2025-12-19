@@ -1,0 +1,60 @@
+# Cultural LoRA Training Configuration
+# For fine-tuning SDXL on African design aesthetics
+
+model:
+  base_model: "stabilityai/stable-diffusion-xl-base-1.0"
+  output_dir: "models/finetuned/cultural_lora_v1"
+
+lora:
+  rank: 32
+  alpha: 64
+  target_modules:
+    - "to_q"
+    - "to_v"
+    - "to_k"
+    - "to_out.0"
+  dropout: 0.05
+
+training:
+  learning_rate: 1e-4
+  num_epochs: 10
+  batch_size: 4
+  gradient_accumulation_steps: 4
+  warmup_steps: 500
+  max_train_steps: 10000
+  save_steps: 1000
+  checkpointing_steps: 500
+  mixed_precision: "fp16"
+  gradient_checkpointing: true
+
+dataset:
+  train_data_dir: "data/processed/train"
+  validation_split: 0.1
+  resolution: 1024
+  caption_column: "caption"
+  image_column: "image"
+  center_crop: true
+  random_flip: true
+
+# African aesthetic prompts for training
+prompt_templates:
+  - "{caption}, African design, cultural motifs"
+  - "{caption}, Adinkra patterns, Ghanaian style"
+  - "{caption}, Kente cloth inspired, vibrant colors"
+  - "{caption}, Ankara print, bold patterns"
+  - "{caption}, traditional African art, geometric"
+
+validation:
+  validation_prompts:
+    - "A modern logo with Adinkra symbols"
+    - "Business card design with Kente patterns"
+    - "Album cover with vibrant African aesthetics"
+  num_validation_images: 4
+  validation_epochs: 2
+
+logging:
+  report_to: "wandb"
+  project_name: "kratorai-cultural-lora"
+  run_name: "cultural_v1"
+
+seed: 42

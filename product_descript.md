@@ -1,0 +1,37 @@
+### KratorAI Product Description: The AI Engine
+
+KratorAI is a pioneering platform that empowers African graphic designers by transforming their static artwork into dynamic, monetizable digital assets through an advanced AI engine. At its core, the **KratorAI Generative Engine** is a proprietary AI system designed to "breathe life" into designs, enabling scalable creativity and recurring revenue in the creator economy. This engine addresses the value gap in global design marketplaces by automating routine tasks while preserving cultural authenticity, allowing designers to focus on high-value innovation.
+
+Key AI Features:
+- **Design Breeding**: The flagship capability, where the AI combines "DNA" from two or more templates (e.g., blending Adinkra patterns from one with Kente motifs from another) to generate novel, licensed assets. This creates hybrid designs that inherit stylistic elements proportionally, with built-in traceability for royalty distribution.
+- **Refining and Variation Generation**: AI enhances existing templates via user prompts (e.g., "infuse vibrant Lagos street vibes") to produce high-fidelity variations, maintaining structural integrity while adapting to cultural or thematic nuances.
+- **Targeted Editing**: Inpainting and style transfer tools allow precise modifications, such as swapping colors, adding elements, or resizing layouts, all while ensuring outputs remain culturally resonant and commercially viable.
+- **Cultural Localization**: Fine-tuned on a dataset of African aesthetics, the engine prioritizes motifs, palettes, and compositions from regions like West and East Africa, differentiating it from generic tools like Canva's Magic Design.
+
+As of December 15, 2025, the KratorAI website (kratorai.com) is live but in an early landing-page stage, featuring a hero section with the tagline "Empowering Africa's Graphic Designers in the AI Era," founder bios, and a waitlist sign-up for 500+ designers. No interactive AI features or demos are yet visible—uploads and breeding are placeholders—confirming the site's role as a teaser for the Q4 2026 beta launch. The AI engine will integrate via backend APIs, unlocking these capabilities for users.
+
+This AI-centric approach creates a network effect: Designers upload once, and the engine spawns infinite remixes, driving subscriptions ($13.9B GenAI design market by 2034) and royalties (embedded in every output).
+
+### Development Plan for the Dev Team: AI Engine Focus
+
+This plan outlines the AI-specific development roadmap for the KratorAI Generative Engine, assuming the frontend (e.g., React-based uploads and dashboards on kratorai.com) is ready for API integration. We'll leverage Gemini API for rapid prototyping (as discussed), transitioning to fine-tuned models on Vertex AI for production. The goal: MVP beta by Q4 2026 with 1,000 onboarded designers, handling 2,000 users in Year 1.
+
+Focus exclusively on AI: Data pipeline, model ops, feature logic, and integration. Total timeline: 24 weeks, with 40% of seed budget allocated (~$200K for compute/tools).
+
+#### Tech Stack (AI-Centric)
+- **Prototyping**: Google Gemini API (2.5 Flash for speed, 3 Pro for quality) via Python SDK.
+- **Production**: Vertex AI for fine-tuning; PyTorch for custom logic (e.g., latent interpolation).
+- **Backend**: FastAPI for AI endpoints; PostgreSQL for metadata/lineage; NetworkX for royalty graphs.
+- **Storage/Infra**: Google Cloud Storage for assets; Vertex AI endpoints for inference (GPU autoscaling).
+- **Monitoring**: Vertex AI metrics for latency/quality; custom evals for cultural relevance.
+
+#### Phased Roadmap
+
+| Phase | Objectives & Key Deliverables | Tasks & Code Snippets | Timeline & Resources | Success Metrics & Risks |
+|-------|-------------------------------|-----------------------|----------------------|-------------------------|
+| **1. Data Pipeline Setup**<br>(Foundation for African Dataset) | Build ingestion and annotation pipeline to curate 1,000+ templates from waitlist uploads. | - Integrate upload API: Auto-encode images to latents via Gemini Vision.<br>- Annotate: Use CLIP-like prompts for tags (e.g., "Describe African motifs in this PNG").<br>- Augment: Generate 5x variations via API calls.<br>Code: <br>```python:disable-run
+| **2. AI Prototyping with Gemini**<br>(Validate Core Features) | Prototype breeding, refining, and editing using zero/few-shot prompts; test on sample data. | - Breeding: Multi-image prompts for fusion (e.g., "Blend styles of Image1 and Image2 equally").<br>- Refining: Image-to-image with controls (e.g., "Enhance with Nairobi urban palette").<br>- Editing: Inpainting via Imagen integration.<br>- Lineage: Log generations in NetworkX graph.<br>Code: <br>```python<br>response = model.generate_content([<br>    "Breed: Combine Adinkra from", img1_uri, "with Kente from", img2_uri<br>])<br>new_asset = response.image  # Embed metadata for royalties<br>graph.add_edge(parent1_id, new_id, share=0.5)<br>``` | Weeks 4-8<br>2 ML Engineers<br>Cost: $500 (API calls) | 100+ prototypes; >75% human-rated relevance.<br>Risk: Prompt inconsistency—Mitigate with templated prompts and A/B testing. |
+| **3. Feature Implementation & API Layer**<br>(Production-Ready Endpoints) | Develop secure APIs for AI ops; add royalty computation. | - Endpoints: `/breed` (inputs: URIs, weights; outputs: asset + graph).<br>- Multi-template support: Chain API calls for n-way blends.<br>- Error handling: Fallback to base refinements on failures.<br>Code: <br>```python<br>@app.post("/breed")<br>async def breed(request: BreedRequest):<br>    content = ["Fuse designs:", *request.images]<br>    if request.prompt: content.append(request.prompt)<br>    response = model.generate_content(content)<br>    # Compute shares: nx.descendants(graph, parents)<br>    return {"asset": response.image, "royalties": compute_shares()}<br>``` | Weeks 9-14<br>2 Backend/ML Engineers<br>Cost: $1K (testing) | Latency <10s; 95% uptime in load tests.<br>Risk: Rate limits—Mitigate with caching and queuing (e.g., Celery). |
+| **4. Fine-Tuning & Optimization**<br>(Proprietary Edge) | Transition to custom-tuned model for cultural fidelity; optimize for scale. | - Dataset prep: JSONL pairs (input templates → bred outputs).<br>- Tune on Vertex: Supervised fine-tuning on Gemini 2.5 Pro (10 epochs, focus on image blends).<br>- Hybrid: Fallback to Gemini for edge cases.<br>- Post-process: Add watermarks/metadata via Pillow.<br>Code: <br>```python<br># Vertex AI tuning script<br>from vertexai.preview.generative_models import GenerativeModel<br>tuned_model = GenerativeModel("projects/krator-ai/locations/us-central1/tunedModels/breed-v1")<br>response = tuned_model.generate_content(content)  # Swap in prod<br>``` | Weeks 15-20<br>1 ML Lead, GPU quota<br>Cost: $2K (tuning runs) | >85% cultural match (surveys); 20% faster inference.<br>Risk: Overfitting—Mitigate with 20% holdout validation. |
+| **5. Testing, Integration & Iteration**<br>(Beta Readiness) | Rigorous AI evals; integrate with site; plan for ongoing retraining. | - Evals: PSNR/SSIM for quality; custom bias checks.<br>- Beta tests: Simulate 50 users breeding designs.<br>- Retrain pipeline: Quarterly on new uploads.<br>Code: <br>```python<br>import torchmetrics<br>quality = torchmetrics.PeakSignalNoiseRatio()(pred_img, gt_img)<br>if quality > 30: approve_asset()<br>``` | Weeks 21-24 + Ongoing<br>Full AI Team<br>Cost: $500 (monitoring) | 90% user satisfaction; handle 50k users/Year 3.<br>Risk: Scalability—Mitigate with Vertex autoscaling. |
+
