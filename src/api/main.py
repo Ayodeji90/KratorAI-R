@@ -39,6 +39,36 @@ app = FastAPI(
 
 from src.utils.rate_limit import RateLimitMiddleware
 
+# Unified process endpoint
+@app.post("/process")
+async def process_request(request: Request):
+    """Unified endpoint to route requests based on action."""
+    try:
+        body = await request.json()
+        action = body.get("action")
+        
+        valid_actions = ["breed", "refine", "edit", "template", "agent"]
+        if action not in valid_actions:
+            return JSONResponse(
+                status_code=400,
+                content={"detail": f"Invalid action: {action}. Valid actions are: {', '.join(valid_actions)}"}
+            )
+        
+        # Redirect to the specific route with 307 to preserve method and body
+        # For 'agent', we might need to be more specific if there are multiple sub-routes
+        target_path = f"/{action}"
+        if action == "agent":
+            target_path = "/agent/chat"
+            
+        return RedirectResponse(url=target_path, status_code=307)
+        
+    except Exception as e:
+        logger.error(f"Error in /process: {str(e)}")
+        return JSONResponse(
+            status_code=400,
+            content={"detail": "Invalid JSON body or missing action key"}
+        )
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
