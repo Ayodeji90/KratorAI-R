@@ -59,7 +59,8 @@ async def refine_design(request: RefineRequest):
 
 @router.post("/upload", response_model=VariationResponse)
 async def refine_uploaded_design(
-    file: UploadFile = File(..., description="Image file to refine"),
+    file: Optional[UploadFile] = File(None, description="Image file to refine"),
+    image_url: Optional[str] = Form(None, description="URL of image to refine"),
     prompt: str = Form(default="Enhance this design with vibrant African patterns"),
     strength: float = Form(default=0.7, ge=0.1, le=1.0),
     num_variations: int = Form(default=3, ge=1, le=5),
@@ -70,25 +71,33 @@ async def refine_uploaded_design(
     This endpoint accepts multipart form data for direct file uploads,
     making it easy to integrate with web UIs.
     """
-    # Validate file type
-    if not file.content_type or not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="File must be an image")
-    
+    if not file and not image_url:
+        raise HTTPException(status_code=400, detail="Either file or image_url must be provided")
+
     try:
-        # Save uploaded file temporarily
-        temp_dir = Path(tempfile.gettempdir()) / "kratorai_uploads"
-        temp_dir.mkdir(exist_ok=True)
-        
-        file_ext = Path(file.filename or "upload.png").suffix or ".png"
-        temp_path = temp_dir / f"{uuid4()}{file_ext}"
-        
-        content = await file.read()
-        temp_path.write_bytes(content)
+        temp_path = None
+        if file:
+            # Validate file type
+            if not file.content_type or not file.content_type.startswith("image/"):
+                raise HTTPException(status_code=400, detail="File must be an image")
+                
+            # Save uploaded file temporarily
+            temp_dir = Path(tempfile.gettempdir()) / "kratorai_uploads"
+            temp_dir.mkdir(exist_ok=True)
+            
+            file_ext = Path(file.filename or "upload.png").suffix or ".png"
+            temp_path = temp_dir / f"{uuid4()}{file_ext}"
+            
+            content = await file.read()
+            temp_path.write_bytes(content)
+            image_uri = str(temp_path)
+        else:
+            image_uri = image_url
         
         try:
             # Process the image
             variations = await refining_service.refine(
-                image_uri=str(temp_path),
+                image_uri=image_uri,
                 prompt=prompt,
                 strength=strength,
                 num_variations=num_variations,
@@ -120,7 +129,7 @@ async def refine_uploaded_design(
         
         finally:
             # Clean up temp file
-            if temp_path.exists():
+            if temp_path and temp_path.exists():
                 temp_path.unlink()
     
     except HTTPException:

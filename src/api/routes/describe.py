@@ -6,15 +6,34 @@ import base64
 router = APIRouter()
 
 @router.post("/describe", response_model=DescribeResponse)
-async def describe_design(file: UploadFile = File(...)):
+async def describe_design(
+    file: Optional[UploadFile] = File(None),
+    image_url: Optional[str] = Form(None)
+):
     """
-    Generate a brief description for an uploaded design/work.
+    Generate a brief description for an uploaded design/work or a design URL.
     """
-    if not file.content_type or not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="File must be an image")
+    if not file and not image_url:
+        raise HTTPException(status_code=400, detail="Either file or image_url must be provided")
 
     try:
-        content = await file.read()
+        if file:
+            if not file.content_type or not file.content_type.startswith("image/"):
+                raise HTTPException(status_code=400, detail="File must be an image")
+            content = await file.read()
+            from PIL import Image
+            import io
+            image = Image.open(io.BytesIO(content))
+        else:
+            # Handle URL
+            import httpx
+            from PIL import Image
+            import io
+            async with httpx.AsyncClient() as client:
+                response = await client.get(image_url)
+                if response.status_code != 200:
+                    raise HTTPException(status_code=400, detail=f"Failed to fetch image from URL: {image_url}")
+                image = Image.open(io.BytesIO(response.content))
         # Create a temporary file-like object or pass base64 if client supports it.
         # The GeminiClient._load_images handles http, gs, and local paths.
         # We need to adapt it or use a lower-level method if we want to pass bytes directly,
@@ -55,14 +74,9 @@ async def describe_design(file: UploadFile = File(...)):
         
         import google.generativeai as genai
         from src.config import get_settings
-        from PIL import Image
-        import io
-
         settings = get_settings()
         genai.configure(api_key=settings.gemini_api_key)
         model = genai.GenerativeModel("gemini-2.0-flash")
-        
-        image = Image.open(io.BytesIO(content))
         
         prompt = "Provide a brief, engaging description of this design or logo. Focus on the visual elements, style, and mood."
         

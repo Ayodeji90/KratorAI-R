@@ -91,13 +91,27 @@ class KratorAgent:
         # Build content parts for Gemini
         content_parts = [message]
         if images:
-            for img_data in images:
-                content_parts.append({
-                    "inline_data": {
-                        "mime_type": img_data.get("mime_type", "image/png"),
-                        "data": img_data.get("data"),
-                    }
-                })
+            import httpx
+            from PIL import Image
+            import io
+            
+            async with httpx.AsyncClient() as client:
+                for img_data in images:
+                    if "data" in img_data:
+                        content_parts.append({
+                            "inline_data": {
+                                "mime_type": img_data.get("mime_type", "image/png"),
+                                "data": img_data.get("data"),
+                            }
+                        })
+                    elif "url" in img_data:
+                        try:
+                            response = await client.get(img_data["url"])
+                            if response.status_code == 200:
+                                image = Image.open(io.BytesIO(response.content))
+                                content_parts.append(image)
+                        except Exception as e:
+                            logger.error(f"Failed to fetch image from URL {img_data['url']}: {e}")
         
         try:
             # Get conversation history for context
@@ -147,13 +161,27 @@ class KratorAgent:
         
         content_parts = [message]
         if images:
-            for img_data in images:
-                content_parts.append({
-                    "inline_data": {
-                        "mime_type": img_data.get("mime_type", "image/png"),
-                        "data": img_data.get("data"),
-                    }
-                })
+            import httpx
+            from PIL import Image
+            import io
+            
+            async with httpx.AsyncClient() as client:
+                for img_data in images:
+                    if "data" in img_data:
+                        content_parts.append({
+                            "inline_data": {
+                                "mime_type": img_data.get("mime_type", "image/png"),
+                                "data": img_data.get("data"),
+                            }
+                        })
+                    elif "url" in img_data:
+                        try:
+                            response = await client.get(img_data["url"])
+                            if response.status_code == 200:
+                                image = Image.open(io.BytesIO(response.content))
+                                content_parts.append(image)
+                        except Exception as e:
+                            logger.error(f"Failed to fetch image from URL {img_data['url']}: {e}")
         
         try:
             history = self.memory.get_conversation_history(max_messages=20)

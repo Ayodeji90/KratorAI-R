@@ -2,7 +2,8 @@
 
 from contextlib import asynccontextmanager
 from pathlib import Path
-from fastapi import FastAPI
+from typing import Optional
+from fastapi import FastAPI, Request, Form, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, JSONResponse
@@ -41,24 +42,54 @@ from src.utils.rate_limit import RateLimitMiddleware
 
 # Unified process endpoint
 @app.post("/process")
-async def process_request(request: Request):
-    """Unified endpoint to route requests based on action."""
+async def process_request(
+    request: Request,
+    action: Optional[str] = Form(None),
+    prompt: Optional[str] = Form(None),
+    image_url: Optional[str] = Form(None),
+    file: Optional[UploadFile] = File(None),
+):
+    """
+    Unified endpoint to route requests based on action.
+    Supports both JSON and Multipart/Form-data.
+    """
     try:
-        body = await request.json()
-        action = body.get("action")
-        
-        valid_actions = ["breed", "refine", "edit", "template", "agent"]
+        # 1. Determine action and parameters
+        if request.headers.get("content-type", "").startswith("application/json"):
+            body = await request.json()
+            action = body.get("action")
+            # For JSON, we just redirect and let the specific route handle it
+            if not action:
+                return JSONResponse(status_code=400, content={"detail": "Missing action in JSON body"})
+        else:
+            # Multipart/Form-data (already parsed by FastAPI params)
+            if not action:
+                return JSONResponse(status_code=400, content={"detail": "Missing action parameter"})
+
+        valid_actions = ["breed", "refine", "edit", "template", "agent", "describe"]
         if action not in valid_actions:
             return JSONResponse(
                 status_code=400,
                 content={"detail": f"Invalid action: {action}. Valid actions are: {', '.join(valid_actions)}"}
             )
+
+        # 2. Handle routing/dispatching
+        # If it's a file upload, we redirect to the /upload version of the route if it exists
+        if file:
+            if action == "refine":
+                return RedirectResponse(url="/refine/upload", status_code=307)
+            elif action == "agent":
+                return RedirectResponse(url="/agent/chat/upload", status_code=307)
+            elif action == "describe":
+                return RedirectResponse(url="/describe", status_code=307)
+            # Add others as needed
         
-        # Redirect to the specific route with 307 to preserve method and body
-        # For 'agent', we might need to be more specific if there are multiple sub-routes
+        # Default redirection (works for JSON or Form without files)
         target_path = f"/{action}"
         if action == "agent":
             target_path = "/agent/chat"
+        elif action == "describe":
+            target_path = "/describe"
             
         return RedirectResponse(url=target_path, status_code=307)
         
@@ -66,7 +97,7 @@ async def process_request(request: Request):
         logger.error(f"Error in /process: {str(e)}")
         return JSONResponse(
             status_code=400,
-            content={"detail": "Invalid JSON body or missing action key"}
+            content={"detail": str(e)}
         )
 
 # CORS middleware
@@ -114,17 +145,15 @@ async def api_info():
     """API information endpoint."""
     return {
         "name": "KratorAI Gemini Integration",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "description": "AI-powered design breeding, refining, and editing for African graphic designers",
         "endpoints": {
+            "/process": "POST - Unified entry point (Multipart/Form or JSON). Takes action, prompt, image_url, and file.",
             "/breed": "POST - Combine multiple designs into hybrid",
-            "/refine": "POST - Generate variations with prompts",
-            "/refine/upload": "POST - Upload image and refine with prompt",
+            "/refine/upload": "POST - Upload image or provide URL to refine",
             "/edit": "POST - Targeted inpainting/style transfer",
-            "/agent/chat": "POST - Chat with KratorAI agent",
-            "/agent/chat/upload": "POST - Upload image and chat",
-            "/agent/chat/stream": "POST - Streaming chat responses",
-            "/agent/session": "POST/GET/DELETE - Session management",
+            "/agent/chat/upload": "POST - Upload image or provide URL to chat",
+            "/describe": "POST - Generate description from image or URL",
             "/health": "GET - Health check",
         },
         "docs": "/docs",

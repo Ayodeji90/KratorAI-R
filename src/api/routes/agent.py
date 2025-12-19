@@ -95,7 +95,8 @@ async def chat_with_agent(request: ChatRequest):
 
 @router.post("/chat/upload", response_model=ChatResponse)
 async def chat_with_upload(
-    file: UploadFile = File(..., description="Image file to process"),
+    file: Optional[UploadFile] = File(None, description="Image file to process"),
+    image_url: Optional[str] = Form(None, description="URL of image to process"),
     message: str = Form(default="What can you do with this image?"),
     session_id: Optional[str] = Form(None, description="Session ID"),
 ):
@@ -105,26 +106,38 @@ async def chat_with_upload(
     This endpoint accepts multipart form data for direct file uploads,
     making it easy to integrate with web UIs.
     """
-    # Validate file type
-    if not file.content_type or not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="File must be an image")
-    
+    if not file and not image_url:
+        raise HTTPException(status_code=400, detail="Either file or image_url must be provided")
+
     try:
-        # Read and encode the image
-        content = await file.read()
-        base64_data = base64.b64encode(content).decode("utf-8")
-        
         # Get or create agent
         agent = get_agent(session_id)
+        
+        if file:
+            # Validate file type
+            if not file.content_type or not file.content_type.startswith("image/"):
+                raise HTTPException(status_code=400, detail="File must be an image")
+            
+            # Read and encode the image
+            content = await file.read()
+            base64_data = base64.b64encode(content).decode("utf-8")
+            
+            images = [{
+                "data": base64_data,
+                "mime_type": file.content_type,
+                "id": file.filename or "uploaded_image",
+            }]
+        else:
+            # Use image URL
+            images = [{
+                "url": image_url,
+                "id": "url_image",
+            }]
         
         # Process with the image
         result = await agent.chat(
             message=message,
-            images=[{
-                "data": base64_data,
-                "mime_type": file.content_type,
-                "id": file.filename or "uploaded_image",
-            }],
+            images=images,
         )
         
         # Build response
