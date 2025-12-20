@@ -2,7 +2,7 @@
 
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 from fastapi import FastAPI, Request, Form, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -47,7 +47,9 @@ async def process_request(
     action: Optional[str] = Form(None),
     prompt: Optional[str] = Form(None),
     image_url: Optional[str] = Form(None),
+    image_urls: Optional[List[str]] = Form(None),
     file: Optional[UploadFile] = File(None),
+    files: Optional[List[UploadFile]] = File(None),
 ):
     """
     Unified endpoint to route requests based on action.
@@ -75,15 +77,21 @@ async def process_request(
 
         # 2. Handle routing/dispatching
         # If it's a file upload, we redirect to the /upload version of the route if it exists
-        if file:
+        if file or files:
             if action == "refine":
                 return RedirectResponse(url="/refine/upload", status_code=307)
             elif action == "agent":
                 return RedirectResponse(url="/agent/chat/upload", status_code=307)
             elif action == "describe":
                 return RedirectResponse(url="/describe", status_code=307)
+            elif action == "breed":
+                return RedirectResponse(url="/breed/upload", status_code=307)
             # Add others as needed
         
+        # If multiple URLs are provided for breeding
+        if action == "breed" and (image_urls or (image_url and image_urls)):
+             return RedirectResponse(url="/breed/upload", status_code=307)
+
         # Default redirection (works for JSON or Form without files)
         target_path = f"/{action}"
         if action == "agent":
