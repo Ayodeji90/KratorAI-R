@@ -3,6 +3,7 @@
 import os
 import tempfile
 from pathlib import Path
+from typing import Optional
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from uuid import uuid4
 

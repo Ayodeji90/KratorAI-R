@@ -1,4 +1,5 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from typing import Optional
+from fastapi import APIRouter, UploadFile, File, HTTPException, Form
 from src.services.gemini_client import get_gemini_client
 from src.api.schemas.describe import DescribeResponse
 import base64
