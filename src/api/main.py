@@ -17,6 +17,10 @@ logger = get_logger(__name__)
 # Static files directory
 STATIC_DIR = Path(__file__).parent.parent / "static"
 
+# Generated images directory
+GENERATED_DIR = Path("/tmp/kratorai_generated")
+GENERATED_DIR.mkdir(exist_ok=True)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -177,3 +181,4 @@ async def health_check():
 
 # Mount static files (must be after all other routes)
 app.mount("/static", StaticFiles(directory=STATIC_DIR, html=True), name="static")
+app.mount("/generated", StaticFiles(directory=GENERATED_DIR), name="generated")

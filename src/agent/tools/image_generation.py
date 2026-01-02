@@ -9,7 +9,7 @@ from typing import Optional
 from uuid import uuid4
 
 from src.agent.tools.base_tool import BaseTool, ToolResult
-from src.services.gemini_client import get_gemini_client
+
 
 
 class ImageGenerationTool(BaseTool):
@@ -69,24 +69,25 @@ class ImageGenerationTool(BaseTool):
         # Enhance the prompt based on style
         enhanced_prompt = self._build_styled_prompt(prompt, style)
         
-        client = get_gemini_client()
+        from src.services.flux_client import get_flux_client
+        client = get_flux_client()
         
         try:
-            # Generate using Gemini
-            result = await client.generate_with_images(
+            # Generate using FLUX.1
+            result = await client.generate_image(
                 prompt=enhanced_prompt,
-                image_uris=[],
-                generation_config={
-                    "temperature": 0.7,
-                }
+                size="1024x1024", # Defaulting size for now
+                quality="hd" if quality == "high" else "standard"
             )
             
             # Create a unique ID for the generated image
             image_id = str(uuid4())
+            image_uri = ""
+            thumbnail_uri = ""
             
-            # In production, this would save to GCS and return real URI
-            image_uri = f"gs://kratorai-assets/generated/{image_id}.png"
-            thumbnail_uri = f"gs://kratorai-assets/thumbnails/{image_id}_thumb.png"
+            if "data" in result and len(result["data"]) > 0:
+                image_uri = result["data"][0].get("url", "")
+                thumbnail_uri = image_uri
             
             return ToolResult(
                 success=True,

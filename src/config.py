@@ -7,9 +7,11 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
     
-    # Gemini API
-    gemini_api_key: str
-    gemini_model: str = "gemini-2.5-flash"
+    # Azure AI (FLUX.1)
+    azure_ai_endpoint: str
+    azure_ai_key: str
+    azure_ai_deployment: str = "FLUX.1-Kontext-pro"
+    azure_ai_api_version: str = "2025-04-01-preview"
     
     # Google Cloud Storage
     gcs_bucket_name: str = "kratorai-assets"
@@ -32,9 +34,20 @@ class Settings(BaseSettings):
     max_images_per_breed: int = 5
     default_breed_weight: float = 0.5
     
+    # App Settings
+    app_name: str = "KratorAI"
+    app_version: str = "1.0.0"
+    environment: str = "development"
+    cors_origins: str = "*"
+    
+    # Performance
+    flux_timeout_seconds: int = 30
+    max_concurrent_requests: int = 5
+    
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+        extra = "ignore"  # Ignore other extra fields if any
 
 
 @lru_cache()

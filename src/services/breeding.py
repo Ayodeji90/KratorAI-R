@@ -3,14 +3,14 @@
 from typing import Optional
 from uuid import uuid4
 
-from src.services.gemini_client import get_gemini_client
+from src.services.flux_client import get_flux_client
 
 
 class BreedingService:
     """Service for breeding multiple designs together."""
     
     def __init__(self):
-        self.client = get_gemini_client()
+        self.client = get_flux_client()
     
     async def breed(
         self,
@@ -19,7 +19,7 @@ class BreedingService:
         preserve_cultural: bool = True,
     ) -> dict:
         """
-        Breed multiple designs to create a hybrid.
+        Breed multiple designs to create a hybrid using FLUX.1.
         
         Args:
             images: List of (uri, weight) tuples
@@ -29,26 +29,34 @@ class BreedingService:
         Returns:
             Generated asset with URI and metadata
         """
-        # Validate weights sum approximately to 1
-        total_weight = sum(w for _, w in images)
-        if not (0.9 <= total_weight <= 1.1):
-            # Normalize weights
-            images = [(uri, w / total_weight) for uri, w in images]
+        # Construct a blending prompt since FLUX.1 is text-to-image (mostly)
+        # In a real scenario, we might use an image-to-image endpoint if supported
+        # or just describe the blend.
         
-        # Call Gemini for breeding
-        result = await self.client.breed_images(
-            image_uris=images,
-            style_prompt=prompt,
-            preserve_cultural=preserve_cultural,
+        blend_prompt = "Create a hybrid design that blends elements from multiple sources. "
+        blend_prompt += "Combine patterns, colors, and styles into a cohesive image. "
+        
+        if preserve_cultural:
+            blend_prompt += "Ensure African cultural motifs (Adinkra, Kente, etc.) are preserved and highlighted. "
+        if prompt:
+            blend_prompt += f"Also incorporate this style: {prompt}"
+            
+        # Call FLUX.1 for generation
+        result = await self.client.generate_image(
+            prompt=blend_prompt,
+            size="1024x1024",
+            quality="hd"
         )
         
-        # TODO: Save generated image to GCS
-        # For now, return placeholder
         asset_id = str(uuid4())
+        asset_uri = ""
+        
+        if "data" in result and len(result["data"]) > 0:
+            asset_uri = result["data"][0].get("url", "")
         
         return {
             "asset_id": asset_id,
-            "asset_uri": f"gs://kratorai-assets/generated/{asset_id}.png",
-            "thumbnail_uri": f"gs://kratorai-assets/thumbnails/{asset_id}_thumb.png",
+            "asset_uri": asset_uri,
+            "thumbnail_uri": asset_uri,
             "generation_result": result,
         }

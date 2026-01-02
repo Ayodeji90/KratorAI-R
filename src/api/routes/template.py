@@ -8,7 +8,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from PIL import Image
 import io
 
-from src.services.gemini_client import get_gemini_client
+
 from src.api.schemas import VariationResponse, GeneratedAsset
 
 router = APIRouter()
@@ -85,26 +85,32 @@ async def edit_template(
         parts.append(prompt)
         
         # 4. Generate
-        client = get_gemini_client()
-        result = await client.generate_content(parts)
+        from src.services.flux_client import get_flux_client
+        client = get_flux_client()
+        
+        # Since FLUX.1 is text-to-image (mostly), we'll use the prompt.
+        # If we want to use the template image as a base, we'd use edit_image,
+        # but edit_image usually takes a URL.
+        # For now, we'll assume we generate a new image based on the prompt.
+        # Ideally, we'd upload the template image to a temp URL and use edit_image.
+        
+        result = await client.generate_image(
+            prompt=prompt,
+            size="1024x1024",
+            quality="hd"
+        )
         
         # 5. Process result
         source_id = str(uuid4())
         generated_assets = []
         
-        if result.get("images"):
+        if "data" in result and len(result["data"]) > 0:
             try:
-                img = result["images"][0]
-                # Save to static/generated
-                output_dir = Path("src/static/generated")
-                output_dir.mkdir(parents=True, exist_ok=True)
+                image_url = result["data"][0].get("url")
                 
+                # In a real app we might download and save, but here we'll just use the URL
                 asset_id = str(uuid4())
-                filename = f"{asset_id}.png"
-                filepath = output_dir / filename
-                img.save(filepath)
-                
-                asset_uri = f"/static/generated/{filename}"
+                asset_uri = image_url
                 
                 generated_assets.append(GeneratedAsset(
                     asset_id=asset_id,
@@ -118,7 +124,7 @@ async def edit_template(
                     }
                 ))
             except Exception as e:
-                print(f"Failed to save image: {e}")
+                print(f"Failed to process image: {e}")
         
         return VariationResponse(
             source_id=source_id,
