@@ -82,21 +82,19 @@ class RefiningService:
                 
                 # Format 2: Base64 encoded (b64_json) - fallback if URL is empty
                 elif "b64_json" in data_item and data_item["b64_json"]:
-                    logger.info("Got base64 image, saving to file...")
+                    logger.info("Got base64 image, returning as data URI...")
                     b64_data = data_item["b64_json"]
-                    file_path = self._save_base64_image(b64_data, asset_id)
-                    # Convert local file path to HTTP URL
-                    asset_uri = f"/generated/{Path(file_path).name}"
-                    logger.info(f"Saved base64 image, accessible at: {asset_uri}")
+                    # Return as data URI that works everywhere (no file storage needed)
+                    asset_uri = f"data:image/png;base64,{b64_data}"
+                    logger.info(f"Returning base64 data URI (length: {len(b64_data)} chars)")
                 
                 # Format 3: Direct image field (base64)
                 elif "image" in data_item:
-                    logger.info("Got base64 image in 'image' field, saving to file...")
+                    logger.info("Got base64 image in 'image' field, returning as data URI...")
                     b64_data = data_item["image"]
-                    file_path = self._save_base64_image(b64_data, asset_id)
-                    # Convert local file path to HTTP URL
-                    asset_uri = f"/generated/{Path(file_path).name}"
-                    logger.info(f"Saved base64 image, accessible at: {asset_uri}")
+                    # Return as data URI that works everywhere (no file storage needed)
+                    asset_uri = f"data:image/png;base64,{b64_data}"
+                    logger.info(f"Returning base64 data URI (length: {len(b64_data)} chars)")
                 
                 else:
                     logger.warning(f"Unknown response format. Available keys: {list(data_item.keys())}")
