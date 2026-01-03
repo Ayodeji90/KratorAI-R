@@ -9,6 +9,10 @@ pydantic-settings>=2.1.0
 # Google AI
 
 
+# Azure AI Vision
+azure-cognitiveservices-vision-computervision>=0.9.0
+msrest>=0.7.0
+
 # Image Processing
 Pillow>=10.0.0
 

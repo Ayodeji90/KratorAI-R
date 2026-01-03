@@ -13,6 +13,10 @@ class Settings(BaseSettings):
     azure_ai_deployment: str = "FLUX.1-Kontext-pro"
     azure_ai_api_version: str = "2025-04-01-preview"
     
+    # Azure Computer Vision
+    azure_vision_endpoint: str | None = None
+    azure_vision_key: str | None = None
+    
     # Google Cloud Storage
     gcs_bucket_name: str = "kratorai-assets"
     google_application_credentials: str | None = None
