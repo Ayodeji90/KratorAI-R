@@ -54,3 +54,4 @@ class VariationResponse(BaseModel):
     """Response for refinement variations."""
     source_id: str
     variations: list[GeneratedAsset]
+    prompt_refinement: Optional[dict] = None  # Includes refined prompt details

@@ -17,6 +17,14 @@ class Settings(BaseSettings):
     azure_vision_endpoint: str | None = None
     azure_vision_key: str | None = None
     
+    # Azure OpenAI (o3-mini for reasoning)
+    azure_openai_endpoint: str | None = None
+    azure_openai_key: str | None = None
+    azure_openai_deployment: str = "o3-mini"  # Your deployment name
+    azure_openai_api_version: str = "2025-01-01-preview"  # Required for o3-mini
+    openai_max_tokens: int = 2000
+    openai_temperature: float = 0.0  # Deterministic reasoning
+    
     # Google Cloud Storage
     gcs_bucket_name: str = "kratorai-assets"
     google_application_credentials: str | None = None

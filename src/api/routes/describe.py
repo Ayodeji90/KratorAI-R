@@ -1,12 +1,12 @@
 from typing import Optional
 from fastapi import APIRouter, UploadFile, File, HTTPException, Form
 from src.api.schemas.describe import DescribeResponse
-from src.services.azure_vision_client import AzureVisionClient
+from src.services.pipeline_orchestrator import get_pipeline_orchestrator
 
 router = APIRouter()
 
-# Initialize Azure Vision client
-vision_client = AzureVisionClient()
+# Initialize pipeline orchestrator
+pipeline = get_pipeline_orchestrator()
 
 @router.post("/describe", response_model=DescribeResponse)
 async def describe_design(
@@ -14,12 +14,21 @@ async def describe_design(
     image_url: Optional[str] = Form(None)
 ):
     """
-    Generate a description for an uploaded design/work or a design URL using Azure Computer Vision.
+    Generate a comprehensive design description using multi-stage AI pipeline.
+    
+    Pipeline:
+    1. Azure Vision AI: Extracts structured visual data (OCR, layout, colors)
+    2. o3-mini: Reasons over visual data to generate description and analysis
     
     Returns:
-        - description: Main description of the image
-        - tags: List of detected visual elements
-        - extracted_text: OCR text from the image (if any)
+        - description: Human-readable design description
+        - category: Design type classification 
+        - style: Style tags
+        - editable_elements: Suggested editable elements
+        - design_quality: Quality assessment
+        - target_audience: Inferred audience
+        - vision_data: Raw visual extraction data
+        - source: "vision+o3-mini"
     """
     if not file and not image_url:
         raise HTTPException(status_code=400, detail="Either file or image_url must be provided")
@@ -30,17 +39,23 @@ async def describe_design(
         if file:
             image_data = await file.read()
         
-        # Analyze image using Azure Vision
-        result = await vision_client.analyze_image(
+        # Run through multi-stage pipeline
+        result = await pipeline.process_design_upload(
             image_data=image_data,
             image_url=image_url
         )
         
         return DescribeResponse(
-            description=result["description"],
-            tags=result.get("tags", []),
-            extracted_text=result.get("extracted_text", "")
+            description=result.get("description", "No description available"),
+            category=result.get("category", "unknown"),
+            style=result.get("style", []),
+            editable_elements=result.get("editable_elements", []),
+            design_quality=result.get("design_quality", "unknown"),
+            target_audience=result.get("target_audience", "unknown"),
+            vision_data=result.get("vision_data", result),  # Include vision data
+            source=result.get("source", "vision+o3-mini")
         )
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to analyze image: {str(e)}")
+

@@ -485,6 +485,7 @@
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -595,8 +596,10 @@
                 <!-- Description Section -->
                 <div class="description-container" id="descriptionContainer">
                     <div class="description-title">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <span id="descriptionTitleText">AI Description</span>
                     </div>
@@ -786,7 +789,7 @@
                 previewContainer.classList.add('active');
                 uploadZone.style.display = 'none';
                 updateSubmitBtn();
-                
+
                 // Automatically generate description
                 generateDescription(file);
             };
@@ -797,7 +800,7 @@
             // Show loading state
             descriptionContainer.classList.add('active', 'loading');
             descriptionTitleText.innerHTML = '<span class="loading-spinner"></span> Analyzing image...';
-            descriptionText.textContent = 'Generating description with Azure AI Vision...';
+            descriptionText.textContent = 'Generating description with AI pipeline (Vision + o3-mini)...';
             descriptionTags.innerHTML = '';
             extractedTextContainer.style.display = 'none';
 
@@ -816,34 +819,70 @@
                 }
 
                 const result = await response.json();
-                
+
                 // Display description
                 descriptionText.textContent = result.description;
-                
-                // Display tags
-                if (result.tags && result.tags.length > 0) {
-                    descriptionTags.innerHTML = result.tags.map(tag => 
-                        `<span class="tag-chip">${tag}</span>`
-                    ).join('');
-                } else {
-                    descriptionTags.innerHTML = '';
+
+                // Display category badge if available
+                if (result.category && result.category !== 'unknown') {
+                    const categoryBadge = document.createElement('div');
+                    categoryBadge.className = 'tag-chip';
+                    categoryBadge.style.background = 'rgba(99, 102, 241, 0.1)';
+                    categoryBadge.style.borderColor = 'var(--primary)';
+                    categoryBadge.style.color = 'var(--primary)';
+                    categoryBadge.textContent = `📁 ${result.category.replace('_', ' ')}`;
+                    descriptionTags.appendChild(categoryBadge);
                 }
-                
-                // Display extracted text if available
-                if (result.extracted_text && result.extracted_text.trim()) {
-                    extractedText.textContent = result.extracted_text;
-                    extractedTextContainer.style.display = 'block';
-                } else {
-                    extractedTextContainer.style.display = 'none';
+
+                // Display style tags
+                if (result.style && result.style.length > 0) {
+                    result.style.forEach(styleTag => {
+                        const tag = document.createElement('span');
+                        tag.className = 'tag-chip';
+                        tag.textContent = styleTag;
+                        descriptionTags.appendChild(tag);
+                    });
                 }
-                
+
+                // Display editable elements
+                if (result.editable_elements && result.editable_elements.length > 0) {
+                    const editableTitle = document.createElement('div');
+                    editableTitle.style.marginTop = '1rem';
+                    editableTitle.style.fontSize = '0.875rem';
+                    editableTitle.style.fontWeight = '600';
+                    editableTitle.style.color = 'var(--secondary)';
+                    editableTitle.textContent = '✏️ Editable Elements:';
+                    descriptionTags.appendChild(editableTitle);
+
+                    result.editable_elements.forEach(element => {
+                        const chip = document.createElement('span');
+                        chip.className = 'example-chip';
+                        chip.style.background = 'rgba(245, 158, 11, 0.1)';
+                        chip.style.borderColor = 'var(--secondary)';
+                        chip.style.color = 'var(--secondary)';
+                        chip.textContent = element;
+                        descriptionTags.appendChild(chip);
+                    });
+                }
+
+                // Display extracted text if available (from vision_data)
+                const visionData = result.vision_data || {};
+                const textBlocks = visionData.text_blocks || [];
+                if (textBlocks.length > 0) {
+                    const extractedTexts = textBlocks.map(block => block.text).join(' ');
+                    if (extractedTexts.trim()) {
+                        extractedText.textContent = extractedTexts;
+                        extractedTextContainer.style.display = 'block';
+                    }
+                }
+
                 // Remove loading state
                 descriptionContainer.classList.remove('loading');
                 descriptionTitleText.innerHTML = `
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    AI Description
+                    AI Description (${result.source || 'vision+o3-mini'})
                 `;
 
             } catch (error) {
