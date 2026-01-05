@@ -48,7 +48,8 @@ class PipelineOrchestrator:
                 return {
                     **vision_data,
                     "description": f"Vision analysis failed: {vision_data['error']}",
-                    "category": "unknown",
+                    "category": "Posters & Flyers",
+                    "category_id": "691cce9dd92ef6f4ab51",
                     "style": [],
                     "editable_elements": []
                 }
@@ -67,7 +68,8 @@ class PipelineOrchestrator:
             return {
                 "error": str(e),
                 "description": f"Pipeline processing failed: {str(e)}",
-                "category": "unknown",
+                "category": "Posters & Flyers",
+                "category_id": "691cce9dd92ef6f4ab51",
                 "style": [],
                 "editable_elements": []
             }

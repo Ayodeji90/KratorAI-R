@@ -4,6 +4,33 @@ from typing import Dict
 from src.services.o3_mini_client import get_o3_mini_client
 
 
+# Predefined category mapping with IDs
+CATEGORY_MAPPING = {
+    "Professional Headshots": "691cce06000958fbe4ab",
+    "Casual Portraits": "691cce1c0039d32fdc33",
+    "Avatars & Characters": "691cce9dd928966d96eb",
+    "Marketing Banners": "691cce9dd92dedfb123e",
+    "Posters & Flyers": "691cce9dd92ef6f4ab51",
+    "Social Media Graphics": "691cce9dd92fc8863542",
+    "Logos & Icons": "691cce9dd9307e861459",
+    "Product Mockups": "691cce9dd931393bece9",
+    "E-commerce Visuals": "691cce9dd932150db6b9",
+    "Food Photography": "691cce9dd932cc54cc6c",
+    "Fashion & Accessories": "691cce9dd9337ac0cb4d",
+    "Landscapes & Cityscapes": "691cce9dd9343303585f",
+    "Interior Design": "691cce9dd934e7f1e1c6",
+    "Event Backdrops": "691cce9dd93690dd2df1",
+    "Concept Art": "691cce9dd9374b9d915b",
+    "Digital Art & Illustration": "691cce9dd937f47353b0",
+    "Cartoons & Comics": "691cce9dd93896d2200b",
+    "Fantasy Creatures": "691cce9dd9399fde6ac0",
+    "Infographics": "691cce9dd93a45bccfd6",
+    "Presentation Backgrounds": "691cce9dd93b0b79fcae",
+    "Educational Diagrams": "691cce9dd93bbf6d2002",
+    "UI/UX Mockups": "691cce9dd93c5551ea7c"
+}
+
+
 class ReasoningService:
     """Service for reasoning over visual data to generate descriptions."""
     
@@ -30,7 +57,8 @@ class ReasoningService:
         if not self.o3_client.enabled:
             return {
                 "description": "AI reasoning is not configured.",
-                "category": "unknown",
+                "category": "Posters & Flyers",
+                "category_id": "691cce9dd92ef6f4ab51",
                 "style": [],
                 "editable_elements": [],
                 "design_quality": "unknown",
@@ -43,15 +71,40 @@ class ReasoningService:
 
 Given structured visual data from image analysis, you must generate a comprehensive design analysis.
 
+You MUST classify the design into ONE of these exact categories:
+1. Professional Headshots - Professional portrait photos for business/corporate use
+2. Casual Portraits - Informal portrait photography
+3. Avatars & Characters - Character illustrations, avatars, profile pictures
+4. Marketing Banners - Advertisement banners for marketing campaigns
+5. Posters & Flyers - Event posters, promotional flyers, announcements
+6. Social Media Graphics - Graphics designed for social media platforms
+7. Logos & Icons - Brand logos, icon designs, emblems
+8. Product Mockups - Product presentation and mockup designs
+9. E-commerce Visuals - Product images for online stores
+10. Food Photography - Professional food photography and styling
+11. Fashion & Accessories - Fashion photography, clothing, accessories
+12. Landscapes & Cityscapes - Scenic photography of nature or urban environments
+13. Interior Design - Interior design photos and renders
+14. Event Backdrops - Backgrounds for events, ceremonies, celebrations
+15. Concept Art - Creative concept artwork and designs
+16. Digital Art & Illustration - Digital artwork and illustrations
+17. Cartoons & Comics - Cartoon characters, comic art
+18. Fantasy Creatures - Fantasy and mythological creature art
+19. Infographics - Data visualization and informational graphics
+20. Presentation Backgrounds - Backgrounds for slides and presentations
+21. Educational Diagrams - Educational charts, diagrams, teaching materials
+22. UI/UX Mockups - User interface and user experience design mockups
+
 Respond ONLY with valid JSON containing:
 - description: Clear, human-readable description of the design (2-3 sentences)
-- category: Type of design (event_flyer, business_promo, social_media_post, product_ad, informational_poster, or other)
+- category: MUST be one of the exact category names listed above (e.g., "Posters & Flyers", "Social Media Graphics")
 - style: Array of 2-5 style tags (e.g., modern, vintage, minimal, professional, bold, colorful, tech, creative)
 - editable_elements: Array of key elements that can be edited (e.g., headline, background, CTA, colors, logo, text)
 - design_quality: Assessment (high, medium, low) based on structure and composition
 - target_audience: Inferred primary audience (e.g., tech professionals, consumers, students, general public)
 
-Be concise, professional, and accurate. Base your analysis strictly on the provided visual data."""
+Be concise, professional, and accurate. Base your analysis strictly on the provided visual data.
+SELECT THE MOST APPROPRIATE CATEGORY from the list above."""
 
         # Build user prompt with vision data
         user_prompt = f"""Analyze this design based on the following visual data:
@@ -84,7 +137,8 @@ Generate a comprehensive design analysis in JSON format."""
         if "error" in result:
             return {
                 "description": f"Failed to generate description: {result['error']}",
-                "category": "unknown",
+                "category": "Posters & Flyers",
+                "category_id": "691cce9dd92ef6f4ab51",
                 "style": [],
                 "editable_elements": [],
                 "design_quality": "unknown",
@@ -97,11 +151,30 @@ Generate a comprehensive design analysis in JSON format."""
         
         # Ensure all required fields exist with defaults
         result.setdefault("description", "No description available")
-        result.setdefault("category", "other")
+        result.setdefault("category", "Posters & Flyers")  # Default to most common category
         result.setdefault("style", [])
         result.setdefault("editable_elements", [])
         result.setdefault("design_quality", "medium")
         result.setdefault("target_audience", "general public")
+        
+        # Map category name to category ID
+        category_name = result.get("category", "Posters & Flyers")
+        category_id = CATEGORY_MAPPING.get(category_name)
+        
+        # If exact match not found, try to find partial match
+        if not category_id:
+            for cat_name, cat_id in CATEGORY_MAPPING.items():
+                if cat_name.lower() in category_name.lower() or category_name.lower() in cat_name.lower():
+                    category_id = cat_id
+                    result["category"] = cat_name  # Update to exact match
+                    break
+        
+        # If still not found, default to "Posters & Flyers"
+        if not category_id:
+            category_id = CATEGORY_MAPPING["Posters & Flyers"]
+            result["category"] = "Posters & Flyers"
+        
+        result["category_id"] = category_id
         
         return result
     

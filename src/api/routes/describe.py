@@ -47,7 +47,8 @@ async def describe_design(
         
         return DescribeResponse(
             description=result.get("description", "No description available"),
-            category=result.get("category", "unknown"),
+            category=result.get("category", "Posters & Flyers"),
+            category_id=result.get("category_id", "691cce9dd92ef6f4ab51"),
             style=result.get("style", []),
             editable_elements=result.get("editable_elements", []),
             design_quality=result.get("design_quality", "unknown"),
