@@ -1,20 +1,24 @@
 from typing import Optional
-from fastapi import APIRouter, UploadFile, File, HTTPException, Form
+from fastapi import APIRouter, UploadFile, File, HTTPException, Form, Depends
 from src.api.schemas.describe import DescribeResponse
 from src.services.pipeline_orchestrator import get_pipeline_orchestrator
+from src.security.auth import verify_token
+from src.security.validators import validate_image_upload
 
 router = APIRouter()
 
 # Initialize pipeline orchestrator
 pipeline = get_pipeline_orchestrator()
 
-@router.post("/describe", response_model=DescribeResponse)
+@router.post("/describe", response_model=DescribeResponse, dependencies=[Depends(verify_token)])
 async def describe_design(
     file: Optional[UploadFile] = File(None),
     image_url: Optional[str] = Form(None)
 ):
     """
     Generate a comprehensive design description using multi-stage AI pipeline.
+    
+    **Authentication Required**: Bearer token must be provided in Authorization header.
     
     Pipeline:
     1. Azure Vision AI: Extracts structured visual data (OCR, layout, colors)
@@ -32,6 +36,10 @@ async def describe_design(
     """
     if not file and not image_url:
         raise HTTPException(status_code=400, detail="Either file or image_url must be provided")
+    
+    # Validate file upload if provided
+    if file:
+        await validate_image_upload(file)
     
     try:
         # Get image data if file was uploaded

@@ -4,12 +4,14 @@ import os
 import tempfile
 from pathlib import Path
 from typing import Optional
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends
 from uuid import uuid4
 
 from src.api.schemas import RefineRequest, GeneratedAsset, VariationResponse
 from src.services.refining import RefiningService
 from src.services.pipeline_orchestrator import get_pipeline_orchestrator
+from src.security.auth import verify_token
+from src.security.validators import validate_prompt, validate_image_upload, validate_strength, validate_num_variations
 
 
 router = APIRouter()
@@ -17,10 +19,12 @@ refining_service = RefiningService()
 pipeline = get_pipeline_orchestrator()
 
 
-@router.post("/", response_model=VariationResponse)
+@router.post("/", response_model=VariationResponse, dependencies=[Depends(verify_token)])
 async def refine_design(request: RefineRequest):
     """
     Generate refined variations of a design based on a prompt.
+    
+    **Authentication Required**: Bearer token must be provided in Authorization header.
     
     NEW: User prompts are refined by o3-mini before FLUX generation.
     
@@ -28,6 +32,10 @@ async def refine_design(request: RefineRequest):
     and adapting to cultural or thematic nuances.
     """
     try:
+        # Validate inputs
+        validate_prompt(request.prompt)
+        validate_strength(request.strength)
+        validate_num_variations(request.num_variations)
         # Refine the prompt using o3-mini (extract vision data from image_uri)
         # Note: For URI-based requests, we handle refinement inside the service
         # This endpoint will be enhanced when we add full support for URI-based refinement
@@ -66,7 +74,7 @@ async def refine_design(request: RefineRequest):
         raise HTTPException(status_code=500, detail=f"Refining failed: {str(e)}")
 
 
-@router.post("/upload", response_model=VariationResponse)
+@router.post("/upload", response_model=VariationResponse, dependencies=[Depends(verify_token)])
 async def refine_uploaded_design(
     file: Optional[UploadFile] = File(None, description="Image file to refine"),
     image_url: Optional[str] = Form(None, description="URL of image to refine"),
@@ -77,6 +85,8 @@ async def refine_uploaded_design(
     """
     Upload an image and generate refined variations.
     
+    **Authentication Required**: Bearer token must be provided in Authorization header.
+    
     NEW: Prompts are refined using o3-mini before FLUX generation.
     
     This endpoint accepts multipart form data for direct file uploads,
@@ -84,6 +94,13 @@ async def refine_uploaded_design(
     """
     if not file and not image_url:
         raise HTTPException(status_code=400, detail="Either file or image_url must be provided")
+    
+    # Validate inputs
+    validate_prompt(prompt)
+    validate_strength(strength)
+    validate_num_variations(num_variations)
+    if file:
+        await validate_image_upload(file)
 
     try:
         temp_path = None

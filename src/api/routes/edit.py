@@ -1,11 +1,13 @@
 """Design editing endpoint."""
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from uuid import uuid4
 
 from src.api.schemas import EditRequest, GeneratedAsset
 from src.services.editing import EditingService
 from src.services.pipeline_orchestrator import get_pipeline_orchestrator
+from src.security.auth import verify_token
+from src.security.validators import validate_prompt
 
 
 router = APIRouter()
@@ -13,10 +15,12 @@ editing_service = EditingService()
 pipeline = get_pipeline_orchestrator()
 
 
-@router.post("/", response_model=GeneratedAsset)
+@router.post("/", response_model=GeneratedAsset, dependencies=[Depends(verify_token)])
 async def edit_design(request: EditRequest):
     """
     Apply targeted edits to a design.
+    
+    **Authentication Required**: Bearer token must be provided in Authorization header.
     
     NEW: User prompts are refined by o3-mini before FLUX editing.
     
@@ -24,6 +28,8 @@ async def edit_design(request: EditRequest):
     while ensuring outputs remain culturally resonant.
     """
     try:
+        # Validate prompt
+        validate_prompt(request.prompt)
         # Note: For more advanced refinement, we'd need image data
         # For now, using a simplified refinement approach for URI-based edits
         # Full refinement would require downloading the image first
@@ -54,9 +60,13 @@ async def edit_design(request: EditRequest):
         raise HTTPException(status_code=500, detail=f"Editing failed: {str(e)}")
 
 
-@router.post("/inpaint", response_model=GeneratedAsset)
+@router.post("/inpaint", response_model=GeneratedAsset, dependencies=[Depends(verify_token)])
 async def inpaint_design(image_uri: str, mask_uri: str, prompt: str):
-    """Convenience endpoint for inpainting."""
+    """Convenience endpoint for inpainting.
+    
+    **Authentication Required**: Bearer token must be provided in Authorization header.
+    """
+    validate_prompt(prompt)
     request = EditRequest(
         image_uri=image_uri,
         mask_uri=mask_uri,
@@ -66,9 +76,13 @@ async def inpaint_design(image_uri: str, mask_uri: str, prompt: str):
     return await edit_design(request)
 
 
-@router.post("/style-transfer", response_model=GeneratedAsset)
+@router.post("/style-transfer", response_model=GeneratedAsset, dependencies=[Depends(verify_token)])
 async def style_transfer(image_uri: str, style_prompt: str):
-    """Convenience endpoint for style transfer."""
+    """Convenience endpoint for style transfer.
+    
+    **Authentication Required**: Bearer token must be provided in Authorization header.
+    """
+    validate_prompt(style_prompt)
     request = EditRequest(
         image_uri=image_uri,
         prompt=style_prompt,

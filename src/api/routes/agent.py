@@ -5,9 +5,11 @@ Provides endpoints for:
 - Chat-based interactions with the agent
 - Session management
 - Streaming responses
+
+All chat endpoints require Bearer token authentication.
 """
 
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends
 from fastapi.responses import StreamingResponse
 from typing import Optional
 import json
@@ -26,16 +28,20 @@ from src.api.schemas.agent import (
 )
 from src.agent.krator_agent import get_agent, KratorAgent
 from src.agent.memory import get_session_manager
+from src.security.auth import verify_token
+from src.security.validators import validate_prompt, validate_image_upload
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 
-@router.post("/chat", response_model=ChatResponse)
+@router.post("/chat", response_model=ChatResponse, dependencies=[Depends(verify_token)])
 async def chat_with_agent(request: ChatRequest):
     """
     Send a message to the KratorAI agent and receive a response.
+    
+    **Authentication Required**: Bearer token must be provided in Authorization header.
     
     The agent can:
     - Answer questions about image editing
@@ -45,6 +51,8 @@ async def chat_with_agent(request: ChatRequest):
     - Blend multiple designs together
     """
     try:
+        # Validate prompt
+        validate_prompt(request.message, required=True)
         # Get or create agent for session
         agent = get_agent(request.session_id)
         
@@ -93,7 +101,7 @@ async def chat_with_agent(request: ChatRequest):
         raise HTTPException(status_code=500, detail=f"Chat failed: {str(e)}")
 
 
-@router.post("/chat/upload", response_model=ChatResponse)
+@router.post("/chat/upload", response_model=ChatResponse, dependencies=[Depends(verify_token)])
 async def chat_with_upload(
     file: Optional[UploadFile] = File(None, description="Image file to process"),
     image_url: Optional[str] = Form(None, description="URL of image to process"),
@@ -103,11 +111,18 @@ async def chat_with_upload(
     """
     Upload an image and chat about it with the agent.
     
+    **Authentication Required**: Bearer token must be provided in Authorization header.
+    
     This endpoint accepts multipart form data for direct file uploads,
     making it easy to integrate with web UIs.
     """
     if not file and not image_url:
         raise HTTPException(status_code=400, detail="Either file or image_url must be provided")
+    
+    # Validate inputs
+    validate_prompt(message, required=True)
+    if file:
+        await validate_image_upload(file)
 
     try:
         # Get or create agent
@@ -160,13 +175,18 @@ async def chat_with_upload(
         raise HTTPException(status_code=500, detail=f"Chat failed: {str(e)}")
 
 
-@router.post("/chat/stream")
+@router.post("/chat/stream", dependencies=[Depends(verify_token)])
 async def chat_stream(request: ChatRequest):
     """
     Stream the agent's response in real-time.
     
+    **Authentication Required**: Bearer token must be provided in Authorization header.
+    
     Returns a server-sent events (SSE) stream with response chunks.
     """
+    # Validate prompt
+    validate_prompt(request.message, required=True)
+    
     agent = get_agent(request.session_id)
     
     # Prepare images if provided

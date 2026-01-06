@@ -112,17 +112,20 @@ async def process_request(
             content={"detail": str(e)}
         )
 
-# CORS middleware
+# CORS middleware - configure based on environment
+settings = get_settings()
+allowed_origins = settings.cors_origins.split(",") if settings.cors_origins != "*" else ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure for production
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "DELETE"],  # Only required methods
+    allow_headers=["Authorization", "Content-Type"],  # Only required headers
 )
 
-# Rate limiting middleware
-app.add_middleware(RateLimitMiddleware, requests_per_minute=60)
+# Rate limiting middleware - use from settings
+app.add_middleware(RateLimitMiddleware, requests_per_minute=settings.rate_limit_per_minute)
 
 @app.middleware("http")
 async def error_handling_middleware(request, call_next):

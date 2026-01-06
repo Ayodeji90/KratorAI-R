@@ -3,12 +3,14 @@
 import tempfile
 from pathlib import Path
 from typing import Optional, List
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends
 from uuid import uuid4
 
 from src.api.schemas import BreedRequest, GeneratedAsset, RoyaltyShare, ImageInput
 from src.services.breeding import BreedingService
 from src.lineage.royalty_graph import RoyaltyGraph
+from src.security.auth import verify_token
+from src.security.validators import validate_prompt, validate_image_upload
 
 
 router = APIRouter()
@@ -16,15 +18,20 @@ breeding_service = BreedingService()
 royalty_graph = RoyaltyGraph()
 
 
-@router.post("/", response_model=GeneratedAsset)
+@router.post("/", response_model=GeneratedAsset, dependencies=[Depends(verify_token)])
 async def breed_designs(request: BreedRequest):
     """
     Breed multiple designs together to create a hybrid asset.
+    
+    **Authentication Required**: Bearer token must be provided in Authorization header.
     
     Combines visual "DNA" from input designs proportionally based on weights,
     generating novel designs while maintaining cultural authenticity.
     """
     try:
+        # Validate prompt if provided
+        if request.prompt:
+            validate_prompt(request.prompt)
         # Generate bred design
         result = await breeding_service.breed(
             images=[(img.uri, img.weight) for img in request.images],
@@ -56,9 +63,12 @@ async def breed_designs(request: BreedRequest):
         raise HTTPException(status_code=500, detail=f"Breeding failed: {str(e)}")
 
 
-@router.post("/multi", response_model=list[GeneratedAsset])
+@router.post("/multi", response_model=list[GeneratedAsset], dependencies=[Depends(verify_token)])
 async def breed_multiple(requests: list[BreedRequest]):
-    """Batch breed multiple design combinations."""
+    """Batch breed multiple design combinations.
+    
+    **Authentication Required**: Bearer token must be provided in Authorization header.
+    """
     results = []
     for req in requests:
         result = await breed_designs(req)
@@ -66,7 +76,7 @@ async def breed_multiple(requests: list[BreedRequest]):
     return results
 
 
-@router.post("/upload", response_model=GeneratedAsset)
+@router.post("/upload", response_model=GeneratedAsset, dependencies=[Depends(verify_token)])
 async def breed_uploaded_designs(
     files: Optional[List[UploadFile]] = File(None, description="Image files to breed"),
     image_urls: Optional[List[str]] = Form(None, description="URLs of images to breed"),
@@ -76,8 +86,13 @@ async def breed_uploaded_designs(
     """
     Upload multiple images or provide URLs to breed them together.
     
+    **Authentication Required**: Bearer token must be provided in Authorization header.
+    
     This endpoint accepts multipart form data for direct file uploads and URLs.
     """
+    # Validate prompt if provided
+    if prompt:
+        validate_prompt(prompt)
     # Collect all image URIs
     image_inputs = []
     temp_paths = []

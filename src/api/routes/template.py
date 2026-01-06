@@ -4,16 +4,18 @@ import json
 from typing import List, Optional
 from pathlib import Path
 from uuid import uuid4
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends
 from PIL import Image
 import io
 
 
 from src.api.schemas import VariationResponse, GeneratedAsset
+from src.security.auth import verify_token
+from src.security.validators import validate_prompt, validate_image_upload
 
 router = APIRouter()
 
-@router.post("/edit", response_model=VariationResponse)
+@router.post("/edit", response_model=VariationResponse, dependencies=[Depends(verify_token)])
 async def edit_template(
     template_image: UploadFile = File(...),
     aspect_images: List[UploadFile] = File(default=[]),
@@ -22,12 +24,20 @@ async def edit_template(
     """
     Edit a template based on aspects and prompts.
     
+    **Authentication Required**: Bearer token must be provided in Authorization header.
+    
     Args:
         template_image: The main template image
         aspect_images: List of reference images for aspects
         data: JSON string containing aspect definitions and global prompt
     """
     try:
+        # Validate template image upload
+        await validate_image_upload(template_image)
+        
+        # Validate aspect images
+        for aspect_img in aspect_images:
+            await validate_image_upload(aspect_img)
         # Parse data
         parsed_data = json.loads(data)
         aspects = parsed_data.get("aspects", [])

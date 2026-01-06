@@ -28,8 +28,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self.requests = defaultdict(list)
     
     async def dispatch(self, request: Request, call_next):
-        # Skip rate limiting for health check and static files
-        if request.url.path == "/health" or request.url.path.startswith("/static"):
+        # Skip rate limiting for health check, static files, and generated images
+        if (
+            request.url.path == "/health" 
+            or request.url.path.startswith("/static") 
+            or request.url.path.startswith("/generated")
+        ):
             return await call_next(request)
             
         client_ip = request.client.host

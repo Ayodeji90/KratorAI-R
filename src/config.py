@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     # Database
     database_url: str = "postgresql+asyncpg://localhost:5432/kratorai"
     
+    # Security Settings
+    backend_token: str  # Required, no default - set via KRATORAI_BACKEND_TOKEN env var
+    
     # API Settings
     api_host: str = "0.0.0.0"
     api_port: int = 8000
