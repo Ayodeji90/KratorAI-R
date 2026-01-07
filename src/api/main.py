@@ -118,7 +118,10 @@ allowed_origins = settings.cors_origins.split(",") if settings.cors_origins != "
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origins=[
+        "http://localhost:3000",           # Local development        # Production frontend
+        "https://www.kratorai.com",
+    ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "DELETE"],  # Only required methods
     allow_headers=["Authorization", "Content-Type"],  # Only required headers
