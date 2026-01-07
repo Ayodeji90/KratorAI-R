@@ -2,6 +2,7 @@
 
 from typing import Dict
 from src.services.o3_mini_client import get_o3_mini_client
+from src.prompts.reasoning_prompts import DESIGN_ANALYSIS_PROMPT
 
 
 # Predefined category mapping with IDs
@@ -67,44 +68,8 @@ class ReasoningService:
             }
         
         # Build system prompt
-        system_prompt = """You are an expert design analyst specializing in flyers, posters, and graphic designs.
-
-Given structured visual data from image analysis, you must generate a comprehensive design analysis.
-
-You MUST classify the design into ONE of these exact categories:
-1. Professional Headshots - Professional portrait photos for business/corporate use
-2. Casual Portraits - Informal portrait photography
-3. Avatars & Characters - Character illustrations, avatars, profile pictures
-4. Marketing Banners - Advertisement banners for marketing campaigns
-5. Posters & Flyers - Event posters, promotional flyers, announcements
-6. Social Media Graphics - Graphics designed for social media platforms
-7. Logos & Icons - Brand logos, icon designs, emblems
-8. Product Mockups - Product presentation and mockup designs
-9. E-commerce Visuals - Product images for online stores
-10. Food Photography - Professional food photography and styling
-11. Fashion & Accessories - Fashion photography, clothing, accessories
-12. Landscapes & Cityscapes - Scenic photography of nature or urban environments
-13. Interior Design - Interior design photos and renders
-14. Event Backdrops - Backgrounds for events, ceremonies, celebrations
-15. Concept Art - Creative concept artwork and designs
-16. Digital Art & Illustration - Digital artwork and illustrations
-17. Cartoons & Comics - Cartoon characters, comic art
-18. Fantasy Creatures - Fantasy and mythological creature art
-19. Infographics - Data visualization and informational graphics
-20. Presentation Backgrounds - Backgrounds for slides and presentations
-21. Educational Diagrams - Educational charts, diagrams, teaching materials
-22. UI/UX Mockups - User interface and user experience design mockups
-
-Respond ONLY with valid JSON containing:
-- description: Clear, human-readable description of the design (2-3 sentences)
-- category: MUST be one of the exact category names listed above (e.g., "Posters & Flyers", "Social Media Graphics")
-- style: Array of 2-5 style tags (e.g., modern, vintage, minimal, professional, bold, colorful, tech, creative)
-- editable_elements: Array of key elements that can be edited (e.g., headline, background, CTA, colors, logo, text)
-- design_quality: Assessment (high, medium, low) based on structure and composition
-- target_audience: Inferred primary audience (e.g., tech professionals, consumers, students, general public)
-
-Be concise, professional, and accurate. Base your analysis strictly on the provided visual data.
-SELECT THE MOST APPROPRIATE CATEGORY from the list above."""
+        # Build system prompt
+        system_prompt = DESIGN_ANALYSIS_PROMPT
 
         # Build user prompt with vision data
         user_prompt = f"""Analyze this design based on the following visual data:
