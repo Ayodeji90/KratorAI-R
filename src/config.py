@@ -8,8 +8,8 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
     
     # Azure AI (FLUX.1)
-    azure_ai_endpoint: str
-    azure_ai_key: str
+    azure_ai_endpoint: str | None = None
+    azure_ai_key: str | None = None
     azure_ai_deployment: str = "FLUX.1-Kontext-pro"
     azure_ai_api_version: str = "2025-04-01-preview"
     
@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://localhost:5432/kratorai"
     
     # Security Settings
-    backend_token: str  # Required, no default - set via KRATORAI_BACKEND_TOKEN env var
+    backend_token: str = "dev-token-change-in-production"  # Default for dev, set via KRATORAI_BACKEND_TOKEN in production
     
     # API Settings
     api_host: str = "0.0.0.0"

@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, JSONResponse
 
 from src.config import get_settings
-from src.api.routes import breed, refine, edit, agent, describe, template
+from src.api.routes import breed, refine, edit, agent, describe, template, voice
 from src.utils.logging import setup_logging, get_logger
 
 logger = get_logger(__name__)
@@ -150,6 +150,7 @@ app.include_router(edit.router, prefix="/edit", tags=["Design Editing"])
 app.include_router(agent.router, prefix="/agent", tags=["AI Agent"])
 app.include_router(describe.router, prefix="", tags=["Design Description"])
 app.include_router(template.router, prefix="/template", tags=["Template Editing"])
+app.include_router(voice.router, prefix="/voice", tags=["Voice Conversation"])
 
 
 @app.get("/")
@@ -172,6 +173,9 @@ async def api_info():
             "/edit": "POST - Targeted inpainting/style transfer",
             "/agent/chat/upload": "POST - Upload image or provide URL to chat",
             "/describe": "POST - Generate description from image or URL",
+            "/voice/conversation/start": "POST - Start voice conversation",
+            "/voice/conversation/turn": "POST - Process conversation turn",
+            "/voice/conversation/confirm": "POST - Confirm and get execution params",
             "/health": "GET - Health check",
         },
         "docs": "/docs",
