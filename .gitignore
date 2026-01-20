@@ -159,5 +159,5 @@ src/static/generated/*
 test_output.txt
 debug_edit.py
 *.png
-*.jpg
+#*.jpg
 *.jpeg
