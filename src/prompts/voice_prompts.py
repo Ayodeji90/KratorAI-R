@@ -162,7 +162,7 @@ COMPLETENESS_REQUIREMENTS = {
 }
 
 # Maximum turns before forcing completion
-MAX_CONVERSATION_TURNS = 7
+MAX_CONVERSATION_TURNS = 3
 
 # Maximum times to ask similar question type
-MAX_REPETITIVE_QUESTIONS = 3
+MAX_REPETITIVE_QUESTIONS = 2

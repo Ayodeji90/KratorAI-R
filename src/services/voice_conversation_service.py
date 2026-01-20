@@ -75,7 +75,7 @@ class VoiceConversationService:
         logger.info(f"Started conversation session: {session_id}")
         return session_id, ai_response
     
-    def process_turn(self, session_id: str, user_text: str) -> Tuple[AIResponse, str, ExtractedDesignInfo, bool]:
+    async def process_turn(self, session_id: str, user_text: str) -> Tuple[AIResponse, str, ExtractedDesignInfo, bool]:
         """
         Process a conversation turn.
         
@@ -98,7 +98,7 @@ class VoiceConversationService:
         conversation.messages.append(user_message)
         
         # Generate AI response using o3-mini
-        ai_response_text, extracted_info, is_complete = self._generate_ai_response(
+        ai_response_text, extracted_info, is_complete = await self._generate_ai_response(
             conversation, user_text
         )
         
@@ -208,7 +208,7 @@ class VoiceConversationService:
         else:
             return "template"  # Default
     
-    def _generate_ai_response(
+    async def _generate_ai_response(
         self, 
         conversation: VoiceConversationHistory, 
         user_text: str
@@ -222,22 +222,26 @@ class VoiceConversationService:
         # Build context from conversation history
         context = self._build_context(conversation)
         
-        # Create prompt for o3-mini
-        messages = [
-            {"role": "system", "content": VOICE_CONVERSATION_SYSTEM_PROMPT},
-            {"role": "user", "content": f"Conversation context:\n{context}\n\nUser's latest message: {user_text}\n\nRespond with JSON containing ai_message, extracted_info, and conversation_complete."}
-        ]
+        # Create user prompt for o3-mini
+        user_prompt = f"""Conversation context:
+{context}
+
+User's latest message: {user_text}
+
+Respond with JSON containing ai_message, extracted_info, and conversation_complete."""
         
         try:
-            # Call o3-mini for response
-            response = self.o3_client.generate_response(
-                messages=messages,
-                temperature=0.7,
-                max_tokens=500
+            # Call o3-mini for response using the correct method
+            result = await self.o3_client.generate_completion(
+                system_prompt=VOICE_CONVERSATION_SYSTEM_PROMPT,
+                user_prompt=user_prompt,
+                response_format={"type": "json_object"}
             )
             
-            # Parse JSON response
-            result = json.loads(response)
+            # Check for errors
+            if "error" in result:
+                logger.error(f"O3-mini error: {result['error']}")
+                raise Exception(result['error'])
             
             ai_message = result.get("ai_message", "I see. Can you tell me more?")
             extracted_info_dict = result.get("extracted_info", {})
@@ -258,7 +262,7 @@ class VoiceConversationService:
             return ai_message, extracted_info, is_complete
             
         except Exception as e:
-            logger.error(f"Error generating AI response: {e}")
+            logger.error(f"Error generating AI response: {e}", exc_info=True)
             # Fallback response
             return "Could you tell me more about what you'd like?", conversation.extracted_info, False
     
