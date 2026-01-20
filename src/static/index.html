@@ -511,6 +511,163 @@
             opacity: 1;
         }
 
+        /* Textarea Container with Voice Button */
+        .textarea-container {
+            position: relative;
+        }
+
+        .voice-btn {
+            position: absolute;
+            bottom: 0.75rem;
+            right: 0.75rem;
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+        }
+
+        .voice-btn:hover {
+            background: var(--primary-hover);
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+        }
+
+        .voice-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .voice-btn.recording {
+            background: #ef4444;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        /* Voice Conversation Modal */
+        .voice-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .voice-modal.active {
+            display: flex;
+        }
+
+        .voice-modal-content {
+            background: var(--bg-card);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .voice-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .voice-modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .voice-modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.5rem;
+            line-height: 1;
+            padding: 0.25rem;
+        }
+
+        .voice-conversation {
+            min-height: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 1.5rem;
+        }
+
+        .voice-message {
+            margin-bottom: 1rem;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            line-height: 1.5;
+        }
+
+        .voice-message.ai {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+            margin-right: 20%;
+        }
+
+        .voice-message.user {
+            background: var(--primary);
+            color: white;
+            margin-left: 20%;
+            text-align: right;
+        }
+
+        .voice-status {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .voice-status-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 1rem;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .voice-status-icon.listening {
+            animation: pulse 1.5s infinite;
+        }
+
+        .voice-status-icon.speaking {
+            background: #10b981;
+        }
+
         /* Generate Section */
         .generate-section {
             background: var(--bg-card);
@@ -765,8 +922,17 @@
 
                             <!-- Content on Right -->
                             <div class="content-right">
-                                <textarea class="textarea" id="changesTextarea"
-                                    placeholder="For the best results, mention the aspects you want to edit (e.g. Change the color and layout).&#10;&#10;Aspects mentioned here will be automatically selected."></textarea>
+                                <div class="textarea-container">
+                                    <textarea class="textarea" id="changesTextarea"
+                                        placeholder="For the best results, mention the aspects you want to edit (e.g. Change the color and layout).&#10;&#10;Aspects mentioned here will be automatically selected."></textarea>
+                                    <button class="voice-btn" id="voiceBtn" title="Use voice to describe changes">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                            stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                                        </svg>
+                                    </button>
+                                </div>
 
                                 <p class="helper-text">Be specific about what you want to change in the template. Upload
                                     images or logos to add to your design (max 2).</p>
@@ -785,6 +951,28 @@
                 </section>
             </div>
         </main>
+
+        <!-- Voice Conversation Modal -->
+        <div class="voice-modal" id="voiceModal">
+            <div class="voice-modal-content">
+                <div class="voice-modal-header">
+                    <h3 class="voice-modal-title">Voice Assistant</h3>
+                    <button class="voice-modal-close" id="voiceModalClose">&times;</button>
+                </div>
+                <div class="voice-conversation" id="voiceConversation">
+                    <div class="voice-status">
+                        <div class="voice-status-icon" id="voiceStatusIcon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" style="width: 24px; height: 24px">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                            </svg>
+                        </div>
+                        <p id="voiceStatusText">Initializing...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -805,6 +993,18 @@
         const generateSubtitle = document.getElementById('generateSubtitle');
         const selectedTemplatePreview = document.getElementById('selectedTemplatePreview');
         const templatePreviewPlaceholder = document.getElementById('templatePreviewPlaceholder');
+        const voiceBtn = document.getElementById('voiceBtn');
+        const voiceModal = document.getElementById('voiceModal');
+        const voiceModalClose = document.getElementById('voiceModalClose');
+        const voiceConversation = document.getElementById('voiceConversation');
+        const voiceStatusIcon = document.getElementById('voiceStatusIcon');
+        const voiceStatusText = document.getElementById('voiceStatusText');
+
+        // Voice State
+        let voiceSessionId = null;
+        let isVoiceActive = false;
+        let recognition = null;
+        let isSpeaking = false;
 
         // Helper: Show loading state
         function showLoading(message = 'Processing...') {
@@ -1050,6 +1250,309 @@
 
             document.body.insertAdjacentHTML('beforeend', resultsHTML);
         }
+
+        // =====================
+        // VOICE CONVERSATION
+        // =====================
+
+        // Initialize Speech Recognition
+        function initSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert('Speech recognition is not supported in your browser. Please use Chrome or Edge.');
+                return null;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                console.log('User said:', transcript);
+                addVoiceMessage('user', transcript);
+                processVoiceTurn(transcript);
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                if (event.error === 'no-speech') {
+                    updateVoiceStatus('listening', 'No speech detected. Try again...');
+                    setTimeout(() => recognition.start(), 1000);
+                } else {
+                    updateVoiceStatus('error', `Error: ${event.error}`);
+                }
+            };
+
+            recognition.onend = () => {
+                if (isVoiceActive && !isSpeaking) {
+                    // Restart listening after AI finishes speaking
+                    setTimeout(() => {
+                        if (isVoiceActive) recognition.start();
+                    }, 500);
+                }
+            };
+
+            return recognition;
+        }
+
+        // Start Voice Conversation
+        async function startVoiceConversation() {
+            // Check if template is selected
+            if (!selectedTemplate) {
+                alert('Please select a template first before using voice assistant.');
+                return;
+            }
+
+            // Initialize speech recognition
+            recognition = initSpeechRecognition();
+            if (!recognition) return;
+
+            // Open modal
+            voiceModal.classList.add('active');
+            isVoiceActive = true;
+
+            // Clear previous conversation
+            voiceConversation.innerHTML = '';
+            updateVoiceStatus('initializing', 'Starting conversation...');
+
+            try {
+                // Call backend to start conversation
+                const response = await fetch('/voice/conversation/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer aR2sR_NznoXbTWYgSw1Ptr3ZJZ1VKvNjUZodjoFqxiM'
+                    },
+                    body: JSON.stringify({
+                        initial_message: null
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to start conversation: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                voiceSessionId = data.session_id;
+
+                // Show AI greeting
+                const aiText = data.ai_response.text;
+                addVoiceMessage('ai', aiText);
+                await speakText(aiText);
+
+                // Start listening
+                updateVoiceStatus('listening', 'Listening... Speak now');
+                recognition.start();
+
+            } catch (error) {
+                console.error('Error starting voice conversation:', error);
+                alert(`Failed to start voice conversation: ${error.message}`);
+                closeVoiceConversation();
+            }
+        }
+
+        // Process Voice Turn
+        async function processVoiceTurn(userText) {
+            updateVoiceStatus('processing', 'Processing...');
+
+            try {
+                const response = await fetch('/voice/conversation/turn', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer aR2sR_NznoXbTWYgSw1Ptr3ZJZ1VKvNjUZodjoFqxiM'
+                    },
+                    body: JSON.stringify({
+                        session_id: voiceSessionId,
+                        user_text: userText
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to process turn: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                // Show AI response
+                const aiText = data.ai_response.text;
+                addVoiceMessage('ai', aiText);
+                await speakText(aiText);
+
+                // Check if conversation is complete
+                if (data.conversation_complete) {
+                    // Get final prompt
+                    await confirmAndGetPrompt();
+                } else {
+                    // Continue listening
+                    updateVoiceStatus('listening', 'Listening... Speak now');
+                }
+
+            } catch (error) {
+                console.error('Error processing voice turn:', error);
+                alert(`Error: ${error.message}`);
+                closeVoiceConversation();
+            }
+        }
+
+        // Confirm and Get Final Prompt
+        async function confirmAndGetPrompt() {
+            try {
+                const response = await fetch('/voice/conversation/confirm', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer aR2sR_NznoXbTWYgSw1Ptr3ZJZ1VKvNjUZodjoFqxiM'
+                    },
+                    body: JSON.stringify({
+                        session_id: voiceSessionId,
+                        confirmed: true
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to confirm: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                // Populate textarea with the generated prompt
+                changesTextarea.value = data.execution_params.prompt;
+
+                updateVoiceStatus('complete', 'Conversation complete! ✓');
+
+                // Show success message
+                await speakText('Perfect! I\'ve filled in your design changes. You can now generate your design.');
+
+                // Close modal after a delay
+                setTimeout(() => {
+                    closeVoiceConversation();
+                    updateGenerateButton(); // Enable generate button if needed
+                }, 3000);
+
+            } catch (error) {
+                console.error('Error confirming conversation:', error);
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        // Text-to-Speech
+        function speakText(text) {
+            return new Promise((resolve) => {
+                if (!window.speechSynthesis) {
+                    console.warn('Text-to-speech not supported');
+                    resolve();
+                    return;
+                }
+
+                isSpeaking = true;
+                updateVoiceStatus('speaking', 'AI is speaking...');
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+
+                utterance.onend = () => {
+                    isSpeaking = false;
+                    resolve();
+                };
+
+                utterance.onerror = () => {
+                    isSpeaking = false;
+                    resolve();
+                };
+
+                window.speechSynthesis.speak(utterance);
+            });
+        }
+
+        // Add Voice Message to UI
+        function addVoiceMessage(role, text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `voice-message ${role}`;
+            messageDiv.textContent = text;
+
+            // Remove status if it exists
+            const existingStatus = voiceConversation.querySelector('.voice-status');
+            if (existingStatus) {
+                existingStatus.remove();
+            }
+
+            voiceConversation.appendChild(messageDiv);
+            voiceConversation.scrollTop = voiceConversation.scrollHeight;
+        }
+
+        // Update Voice Status
+        function updateVoiceStatus(type, text) {
+            // Remove existing messages to show status
+            const existingStatus = voiceConversation.querySelector('.voice-status');
+            if (!existingStatus) {
+                const statusDiv = document.createElement('div');
+                statusDiv.className = 'voice-status';
+                statusDiv.innerHTML = `
+                    <div class="voice-status-icon" id="voiceStatusIcon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 24px; height: 24px">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                        </svg>
+                    </div>
+                    <p id="voiceStatusText"></p>
+                `;
+                voiceConversation.appendChild(statusDiv);
+            }
+
+            const icon = voiceConversation.querySelector('.voice-status-icon');
+            const textEl = voiceConversation.querySelector('#voiceStatusText');
+
+            if (icon && textEl) {
+                // Update icon class based on type
+                icon.className = 'voice-status-icon';
+                if (type === 'listening') {
+                    icon.classList.add('listening');
+                } else if (type === 'speaking') {
+                    icon.classList.add('speaking');
+                }
+
+                textEl.textContent = text;
+            }
+        }
+
+        // Close Voice Conversation
+        function closeVoiceConversation() {
+            isVoiceActive = false;
+            isSpeaking = false;
+            voiceModal.classList.remove('active');
+
+            if (recognition) {
+                recognition.stop();
+                recognition = null;
+            }
+
+            if (window.speechSynthesis) {
+                window.speechSynthesis.cancel();
+            }
+
+            voiceSessionId = null;
+        }
+
+        // Voice Button Click
+        voiceBtn.addEventListener('click', () => {
+            startVoiceConversation();
+        });
+
+        // Voice Modal Close
+        voiceModalClose.addEventListener('click', () => {
+            closeVoiceConversation();
+        });
+
+        // Close modal on backdrop click
+        voiceModal.addEventListener('click', (e) => {
+            if (e.target === voiceModal) {
+                closeVoiceConversation();
+            }
+        });
 
         // Drag and drop for textarea
         changesTextarea.addEventListener('dragover', (e) => {
