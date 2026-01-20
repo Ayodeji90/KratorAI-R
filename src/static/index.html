@@ -908,7 +908,7 @@
                 formData.append('file', selectedTemplateFile, `${selectedTemplate}.jpg`);
                 formData.append('prompt', changes);
                 formData.append('strength', '0.7');  // Default strength
-                formData.append('num_variations', '3');  // Default variations
+                formData.append('num_variations', '1');  // Single variation
 
                 // Call refine/upload endpoint
                 const refineResponse = await fetch('/refine/upload', {
