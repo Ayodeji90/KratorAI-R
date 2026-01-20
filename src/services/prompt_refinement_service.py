@@ -1,6 +1,6 @@
 """Prompt refinement service - uses o3-mini to refine vague user prompts."""
 
-from typing import Dict
+from typing import Dict, List, Optional
 from src.services.o3_mini_client import get_o3_mini_client
 
 

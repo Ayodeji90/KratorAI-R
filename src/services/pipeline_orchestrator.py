@@ -2,7 +2,7 @@
 
 import hashlib
 import asyncio
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 from src.services.azure_vision_client import AzureVisionClient
 from src.services.reasoning_service import get_reasoning_service
 from src.services.prompt_refinement_service import get_prompt_refinement_service
