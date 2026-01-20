@@ -78,35 +78,54 @@ class PipelineOrchestrator:
         self,
         user_prompt: str,
         image_data: Optional[bytes] = None,
-        image_url: Optional[str] = None
+        image_url: Optional[str] = None,
+        reference_images_data: Optional[list[bytes]] = None
     ) -> dict:
         """
         Process a refinement request with prompt refinement.
         
         Stages:
-        1. Azure Vision: Extract visual data (cached if available)
-        2. o3-mini: Refine user prompt
+        1. Azure Vision: Extract visual data for main image
+        2. Azure Vision: Extract visual data for reference images (logos, etc.)
+        3. o3-mini: Refine user prompt incorporating reference assets
         
         Args:
             user_prompt: User's original prompt
-            image_data: Image as bytes
-            image_url: Image URL
+            image_data: Main image as bytes
+            image_url: Main image URL
+            reference_images_data: List of reference images as bytes
             
         Returns:
             Dictionary with vision_data and refinement details
         """
         try:
-            # Stage 1: Vision Perception (with caching)
+            # Stage 1: Main Image Vision Perception
             vision_data = await self._get_vision_data(image_data, image_url)
             
-            # Stage 2: Prompt Refinement
+            # Stage 2: Reference Images Vision Perception
+            reference_assets = []
+            if reference_images_data:
+                for i, ref_data in enumerate(reference_images_data):
+                    ref_vision = await self.vision_client.extract_visual_data(image_data=ref_data)
+                    # Get a simple description for each reference asset
+                    ref_desc = await self.reasoning_service.generate_design_description(ref_vision)
+                    reference_assets.append({
+                        "id": f"asset_{i+1}",
+                        "category": ref_desc.get("category", "asset"),
+                        "description": ref_desc.get("description", "A reference visual asset"),
+                        "vision_data": ref_vision
+                    })
+            
+            # Stage 3: Prompt Refinement
             refinement_data = await self.prompt_refinement_service.refine_user_prompt(
                 user_prompt=user_prompt,
-                vision_data=vision_data
+                vision_data=vision_data,
+                reference_assets=reference_assets
             )
             
             return {
                 "vision_data": vision_data,
+                "reference_assets": reference_assets,
                 "prompt_refinement": refinement_data,
                 "refined_prompt": refinement_data["refined_prompt"]
             }
@@ -115,6 +134,7 @@ class PipelineOrchestrator:
             print(f"Pipeline error in process_refinement_request: {e}")
             return {
                 "vision_data": {},
+                "reference_assets": [],
                 "prompt_refinement": {
                     "original_prompt": user_prompt,
                     "refined_prompt": user_prompt,

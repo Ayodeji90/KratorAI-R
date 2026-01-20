@@ -76,7 +76,8 @@ async def refine_design(request: RefineRequest):
 
 @router.post("/upload", response_model=VariationResponse, dependencies=[Depends(verify_token)])
 async def refine_uploaded_design(
-    file: Optional[UploadFile] = File(None, description="Image file to refine"),
+    file: Optional[UploadFile] = File(None, description="Main image file to refine"),
+    files: Optional[list[UploadFile]] = File(None, description="Additional reference images (logos, etc.)"),
     image_url: Optional[str] = Form(None, description="URL of image to refine"),
     prompt: str = Form(default="Enhance this design with vibrant African patterns"),
     strength: float = Form(default=0.7, ge=0.1, le=1.0),
@@ -88,9 +89,7 @@ async def refine_uploaded_design(
     **Authentication Required**: Bearer token must be provided in Authorization header.
     
     NEW: Prompts are refined using o3-mini before FLUX generation.
-    
-    This endpoint accepts multipart form data for direct file uploads,
-    making it easy to integrate with web UIs.
+    Supports multiple reference images (logos, assets) to be incorporated.
     """
     if not file and not image_url:
         raise HTTPException(status_code=400, detail="Either file or image_url must be provided")
@@ -101,10 +100,14 @@ async def refine_uploaded_design(
     validate_num_variations(num_variations)
     if file:
         await validate_image_upload(file)
+    if files:
+        for f in files:
+            await validate_image_upload(f)
 
     try:
         temp_path = None
         image_data = None
+        reference_images_data = []
         
         if file:
             # Validate file type
@@ -124,13 +127,20 @@ async def refine_uploaded_design(
             image_uri = str(temp_path)
         else:
             image_uri = image_url
+
+        # Read reference images
+        if files:
+            for f in files:
+                ref_data = await f.read()
+                reference_images_data.append(ref_data)
         
         try:
             # STAGE 1 & 2: Refine the prompt using the pipeline
             refinement_result = await pipeline.process_refinement_request(
                 user_prompt=prompt,
                 image_data=image_data,
-                image_url=image_url
+                image_url=image_url,
+                reference_images_data=reference_images_data
             )
             
             refined_prompt = refinement_result["refined_prompt"]
@@ -181,4 +191,5 @@ async def refine_uploaded_design(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Refining failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Refining failed: {str(e)}")

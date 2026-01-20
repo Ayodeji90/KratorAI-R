@@ -13,7 +13,8 @@ class PromptRefinementService:
     async def refine_user_prompt(
         self,
         user_prompt: str,
-        vision_data: dict
+        vision_data: dict,
+        reference_assets: Optional[list[dict]] = None
     ) -> dict:
         """
         Refine a user's prompt to be clear, explicit, and design-safe.
@@ -21,6 +22,7 @@ class PromptRefinementService:
         Args:
             user_prompt: Original user prompt (may be vague)
             vision_data: Structured visual data from Azure Vision
+            reference_assets: Descriptions of uploaded assets (logos, etc.)
             
         Returns:
             Dictionary containing:
@@ -49,6 +51,7 @@ Rules:
 3. Ensure SAFETY - preserve important elements from the original design
 4. ALIGN with detected layout and structure
 5. Be DESIGN-AWARE (contrast, readability, composition)
+6. INCORPORATE reference assets (logos, images) if provided and requested by the user.
 
 Respond ONLY with valid JSON containing:
 - refined_prompt: Enhanced version of the prompt (detailed and explicit)
@@ -58,17 +61,25 @@ Respond ONLY with valid JSON containing:
 
 Be concise and professional."""
 
+        # Build reference assets context
+        assets_context = ""
+        if reference_assets:
+            assets_context = "\n**Reference Assets Provided (to be added to design):**\n"
+            for asset in reference_assets:
+                assets_context += f"- {asset['id']}: {asset['category']} - {asset['description']}\n"
+
         # Build user prompt with context
         user_prompt_formatted = f"""User's original prompt: "{user_prompt}"
 
-**Design Context (from visual analysis):**
+**Design Context (from visual analysis of main template):**
 - Layout: {vision_data.get('layout', 'unknown')}
 - Text Density: {vision_data.get('text_density', 'unknown')}
 - Detected Text: {self._summarize_text(vision_data.get('text_blocks', []))}
 - Visual Tags: {', '.join(vision_data.get('basic_tags', []))}
 - Has Images: {vision_data.get('has_images', False)}
+{assets_context}
 
-Refine the user's prompt to be clear and explicit while preserving their intent. Output JSON only."""
+Refine the user's prompt to be clear and explicit while preserving their intent. If reference assets are provided, describe exactly how and where they should be incorporated into the design based on the user's instructions. Output JSON only."""
 
         # Call o3-mini with deterministic temperature
         result = await self.o3_client.generate_completion(
