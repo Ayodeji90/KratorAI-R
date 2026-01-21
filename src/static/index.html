@@ -1252,6 +1252,62 @@
         }
 
         // =====================
+        // AUTO-GENERATE FROM VOICE
+        // =====================
+
+        async function startGenerationWithVoicePrompt(prompt) {
+            if (!selectedTemplate || !selectedTemplateFile) {
+                alert('Please select a template first');
+                return;
+            }
+
+            showLoading('🎨 Generating your design from voice prompt...');
+
+            try {
+                // Prepare FormData for refine endpoint
+                const formData = new FormData();
+                formData.append('file', selectedTemplateFile, `${selectedTemplate}.jpg`);
+                formData.append('prompt', prompt);
+                formData.append('strength', '0.7');
+                formData.append('num_variations', '1');
+
+                // Append reference images if any
+                uploadedImages.forEach((imgObj, index) => {
+                    formData.append('files', imgObj.file);
+                });
+
+                // Call refine/upload endpoint
+                const refineResponse = await fetch('/refine/upload', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer aR2sR_NznoXbTWYgSw1Ptr3ZJZ1VKvNjUZodjoFqxiM'
+                    },
+                    body: formData
+                });
+
+                if (!refineResponse.ok) {
+                    const error = await refineResponse.json();
+                    throw new Error(error.detail || 'Failed to generate design');
+                }
+
+                const result = await refineResponse.json();
+                console.log('Voice generation result:', result);
+
+                // Display results
+                displayResults(result);
+
+                // Show success message
+                alert(`✅ Successfully generated ${result.variations.length} design(s) from your voice request!`);
+
+            } catch (error) {
+                console.error('Error generating from voice:', error);
+                alert(`Error: ${error.message}`);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // =====================
         // VOICE CONVERSATION - REALTIME WEBSOCKET (Smooth like ChatGPT)
         // =====================
 
@@ -1456,12 +1512,29 @@
 
                 case 'conversation.complete':
                     if (event.final_prompt) {
-                        changesTextarea.value = event.final_prompt;
-                        updateVoiceStatus('complete', '✅ Got your design request!');
+                        // Extract the actual prompt from AI's response
+                        // The AI says: "Here's the prompt I've created: [PROMPT]. Should I proceed?"
+                        let extractedPrompt = event.final_prompt;
 
-                        setTimeout(() => {
+                        // Try to extract the prompt between "I've created:" and "Should I proceed"
+                        const promptMatch = event.final_prompt.match(/(?:prompt[:\s]+|created[:\s]+)(.*?)(?:\.\s*should|,\s*should|\?\s*$)/is);
+                        if (promptMatch && promptMatch[1]) {
+                            extractedPrompt = promptMatch[1].trim();
+                        }
+
+                        // Put the extracted prompt in the textarea
+                        changesTextarea.value = extractedPrompt;
+                        updateVoiceStatus('complete', '✅ Prompt created! Starting edit...');
+                        updateGenerateButton();
+
+                        // Auto-trigger the refine/edit process
+                        setTimeout(async () => {
                             closeVoiceConversation();
-                            updateGenerateButton();
+
+                            // Automatically start the generation
+                            if (selectedTemplate && extractedPrompt) {
+                                await startGenerationWithVoicePrompt(extractedPrompt);
+                            }
                         }, 1500);
                     }
                     break;
