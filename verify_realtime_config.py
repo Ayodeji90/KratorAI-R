@@ -1,0 +1,77 @@
+"""
+Verify Azure Realtime API Configuration
+
+This script checks if your Azure Realtime API credentials are correctly configured.
+"""
+
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+print("=" * 60)
+print("AZURE REALTIME API CONFIGURATION CHECK")
+print("=" * 60)
+
+# Check environment variables
+endpoint = os.getenv("AZURE_REALTIME_ENDPOINT")
+key = os.getenv("AZURE_REALTIME_KEY")
+deployment = os.getenv("AZURE_REALTIME_DEPLOYMENT")
+api_version = os.getenv("AZURE_REALTIME_API_VERSION")
+
+print("\n1. Environment Variables:")
+print(f"   AZURE_REALTIME_ENDPOINT: {'✓ Set' if endpoint else '✗ NOT SET'}")
+if endpoint:
+    print(f"      Value: {endpoint}")
+print(f"   AZURE_REALTIME_KEY: {'✓ Set' if key else '✗ NOT SET'}")
+if key:
+    print(f"      Value: {key[:10]}...{key[-4:] if len(key) > 14 else ''}")
+print(f"   AZURE_REALTIME_DEPLOYMENT: {'✓ Set' if deployment else '✗ NOT SET'}")
+if deployment:
+    print(f"      Value: {deployment}")
+print(f"   AZURE_REALTIME_API_VERSION: {'✓ Set' if api_version else '✗ NOT SET'}")
+if api_version:
+    print(f"      Value: {api_version}")
+
+print("\n2. WebSocket URL Construction:")
+if endpoint and deployment and api_version:
+    # Construct URL like the realtime_client does
+    base_url = endpoint.rstrip('/')
+    if base_url.startswith("https://"):
+        base_url = base_url.replace("https://", "wss://")
+    
+    ws_url = f"{base_url}/openai/realtime?api-version={api_version}&deployment={deployment}"
+    print(f"   WebSocket URL: {ws_url}")
+else:
+    print("   ✗ Cannot construct URL - missing variables")
+
+print("\n3. Common Issues:")
+print("   - Endpoint should end with '.openai.azure.com' (no trailing slash)")
+print("   - API version should be '2024-10-01-preview' or later")
+print("   - Deployment must be 'gpt-4o-realtime-preview' or 'gpt-realtime-mini'")
+print("   - Deployment must exist in East US 2 or Sweden Central regions")
+
+print("\n4. Required Format Examples:")
+print("   AZURE_REALTIME_ENDPOINT=https://your-resource.openai.azure.com")
+print("   AZURE_REALTIME_DEPLOYMENT=gpt-4o-realtime-preview")
+print("   AZURE_REALTIME_API_VERSION=2024-10-01-preview")
+
+print("\n" + "=" * 60)
+
+# Try to Import and test client
+print("\n5. Testing Realtime Client Import:")
+try:
+    from src.services.realtime_client import get_realtime_client
+    client = get_realtime_client()
+    print(f"   ✓ Client imported successfully")
+    print(f"   Client enabled: {client.enabled}")
+    if client.enabled:
+        print(f"   Endpoint: {client.endpoint}")
+        print(f"   Deployment: {client.deployment}")
+        print(f"   API Version: {client.api_version}")
+except Exception as e:
+    print(f"   ✗ Error: {e}")
+
+print("\n" + "=" * 60)
+print("If you see any ✗ marks above, fix those issues first.")
+print("=" * 60)

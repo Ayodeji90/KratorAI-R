@@ -39,7 +39,13 @@ class RealtimeClient:
     def _get_websocket_url(self) -> str:
         """Construct WebSocket URL for Azure Realtime API."""
         # Convert HTTPS endpoint to WSS
-        base_url = self.endpoint.replace("https://", "wss://")
+        base_url = self.endpoint.rstrip('/')
+        if base_url.startswith("https://"):
+            base_url = base_url.replace("https://", "wss://")
+        elif base_url.startswith("http://"):
+            base_url = base_url.replace("http://", "ws://")
+        
+        # Azure Realtime API WebSocket endpoint
         return f"{base_url}/openai/realtime?api-version={self.api_version}&deployment={self.deployment}"
     
     async def create_session(
@@ -68,6 +74,8 @@ class RealtimeClient:
         try:
             # Create WebSocket connection
             url = self._get_websocket_url()
+            logger.info(f"Connecting to Azure Realtime API: {url}")
+            
             headers = {
                 "api-key": self.api_key
             }
