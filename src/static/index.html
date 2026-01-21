@@ -1252,16 +1252,19 @@
         }
 
         // =====================
-        // VOICE CONVERSATION - REST API (Audio Preview)
+        // VOICE CONVERSATION - REALTIME WEBSOCKET (Smooth like ChatGPT)
         // =====================
 
-        // Audio State
+        // WebSocket and Audio State
+        let voiceWebSocket = null;
         let mediaRecorder = null;
         let audioStream = null;
-        let audioChunks = [];
-        let isRecording = false;
+        let audioContext = null;
+        let audioSourceNodes = [];
+        let isPlayingAudio = false;
+        let pendingAudioChunks = [];
 
-        // Start Voice Conversation
+        // Start Voice Conversation with WebSocket
         async function startVoiceConversation() {
             // Check if template is selected
             if (!selectedTemplate) {
@@ -1275,196 +1278,232 @@
 
             // Clear previous conversation
             voiceConversation.innerHTML = '';
-            updateVoiceStatus('initializing', 'Starting conversation...');
+            updateVoiceStatus('initializing', 'Connecting...');
 
             try {
-                // Start session on backend
-                const response = await fetch('/voice/audio/start', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer aR2sR_NznoXbTWYgSw1Ptr3ZJZ1VKvNjUZodjoFqxiM'
+                // Get microphone access first
+                audioStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        sampleRate: 24000
                     }
                 });
 
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.detail || 'Failed to start conversation');
-                }
+                // Initialize audio context for playback
+                audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
 
-                const data = await response.json();
-                voiceSessionId = data.session_id;
+                // Connect to WebSocket
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}/voice/realtime`;
 
-                // Show greeting
-                addVoiceMessage('ai', data.greeting);
+                console.log('Connecting to:', wsUrl);
+                voiceWebSocket = new WebSocket(wsUrl);
 
-                // Get microphone access
-                audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                voiceWebSocket.onopen = async () => {
+                    console.log('WebSocket connected');
+                    updateVoiceStatus('connected', 'Connected! Speak now...');
 
-                // Start recording
-                await startRecording();
+                    // Start continuous audio streaming
+                    await startContinuousStreaming();
+                };
+
+                voiceWebSocket.onmessage = async (event) => {
+                    try {
+                        const message = JSON.parse(event.data);
+                        await handleRealtimeEvent(message);
+                    } catch (error) {
+                        console.error('Error handling message:', error);
+                    }
+                };
+
+                voiceWebSocket.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    updateVoiceStatus('error', 'Connection error. Retrying...');
+                };
+
+                voiceWebSocket.onclose = (event) => {
+                    console.log('WebSocket closed:', event.code, event.reason);
+                    if (isVoiceActive) {
+                        updateVoiceStatus('disconnected', 'Disconnected');
+                    }
+                };
 
             } catch (error) {
                 console.error('Error starting voice conversation:', error);
                 if (error.name === 'NotAllowedError') {
-                    alert('Microphone access denied. Please allow microphone access to use voice assistant.');
+                    alert('Microphone access denied. Please allow microphone access.');
                 } else {
-                    alert(`Failed to start voice conversation: ${error.message}`);
+                    alert(`Failed to start: ${error.message}`);
                 }
                 closeVoiceConversation();
             }
         }
 
-        // Start Recording Audio
-        async function startRecording() {
+        // Start Continuous Audio Streaming (like ChatGPT)
+        async function startContinuousStreaming() {
             try {
-                audioChunks = [];
+                // Use AudioWorklet or ScriptProcessor for raw PCM streaming
+                const source = audioContext.createMediaStreamSource(audioStream);
+                const processor = audioContext.createScriptProcessor(4096, 1, 1);
 
-                mediaRecorder = new MediaRecorder(audioStream, {
-                    mimeType: 'audio/webm;codecs=opus'
-                });
-
-                mediaRecorder.ondataavailable = (event) => {
-                    if (event.data.size > 0) {
-                        audioChunks.push(event.data);
+                processor.onaudioprocess = (e) => {
+                    if (!isVoiceActive || !voiceWebSocket || voiceWebSocket.readyState !== WebSocket.OPEN) {
+                        return;
                     }
+
+                    // Get audio data
+                    const inputData = e.inputBuffer.getChannelData(0);
+
+                    // Convert to 16-bit PCM
+                    const pcm16 = new Int16Array(inputData.length);
+                    for (let i = 0; i < inputData.length; i++) {
+                        const s = Math.max(-1, Math.min(1, inputData[i]));
+                        pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                    }
+
+                    // Convert to base64
+                    const base64Audio = btoa(String.fromCharCode(...new Uint8Array(pcm16.buffer)));
+
+                    // Send to server
+                    voiceWebSocket.send(JSON.stringify({
+                        type: 'input_audio_buffer.append',
+                        audio: base64Audio
+                    }));
                 };
 
-                mediaRecorder.onstop = async () => {
-                    if (audioChunks.length > 0) {
-                        await sendAudioToBackend();
-                    }
-                };
+                source.connect(processor);
+                processor.connect(audioContext.destination);
 
-                // Start recording
-                mediaRecorder.start();
-                isRecording = true;
-                updateVoiceStatus('listening', 'Listening... Click to stop');
-
-                // Add click handler to stop recording
-                const stopHandler = () => {
-                    if (isRecording && mediaRecorder && mediaRecorder.state === 'recording') {
-                        stopRecording();
-                    }
-                    voiceConversation.removeEventListener('click', stopHandler);
-                };
-                voiceConversation.addEventListener('click', stopHandler);
-
-                // Auto-stop after 10 seconds
-                setTimeout(() => {
-                    if (isRecording && mediaRecorder && mediaRecorder.state === 'recording') {
-                        stopRecording();
-                    }
-                }, 10000);
+                updateVoiceStatus('listening', '🎤 Listening... Just speak naturally');
+                console.log('Continuous audio streaming started');
 
             } catch (error) {
-                console.error('Error starting recording:', error);
-                alert(`Recording error: ${error.message}`);
+                console.error('Error starting continuous streaming:', error);
+                // Fallback to MediaRecorder approach
+                await startMediaRecorderStreaming();
             }
         }
 
-        // Stop Recording
-        function stopRecording() {
-            if (mediaRecorder && mediaRecorder.state === 'recording') {
-                isRecording = false;
-                mediaRecorder.stop();
-                updateVoiceStatus('processing', 'Processing your message...');
+        // Fallback: MediaRecorder streaming
+        async function startMediaRecorderStreaming() {
+            mediaRecorder = new MediaRecorder(audioStream, {
+                mimeType: 'audio/webm;codecs=opus'
+            });
+
+            mediaRecorder.ondataavailable = async (event) => {
+                if (event.data.size > 0 && voiceWebSocket && voiceWebSocket.readyState === WebSocket.OPEN) {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const base64Audio = reader.result.split(',')[1];
+                        voiceWebSocket.send(JSON.stringify({
+                            type: 'input_audio_buffer.append',
+                            audio: base64Audio
+                        }));
+                    };
+                    reader.readAsDataURL(event.data);
+                }
+            };
+
+            // Stream in small chunks for real-time effect
+            mediaRecorder.start(100);
+            updateVoiceStatus('listening', '🎤 Listening... Just speak naturally');
+        }
+
+        // Handle Realtime API Events
+        async function handleRealtimeEvent(event) {
+            console.log('Realtime event:', event.type);
+
+            switch (event.type) {
+                case 'session.created':
+                    voiceSessionId = event.session_id || event.sessionid;
+                    console.log('Session created:', voiceSessionId);
+                    break;
+
+                case 'input_audio_buffer.speech_started':
+                    updateVoiceStatus('listening', '🎤 Hearing you...');
+                    break;
+
+                case 'input_audio_buffer.speech_stopped':
+                    updateVoiceStatus('processing', '💭 Thinking...');
+                    break;
+
+                case 'conversation.item.input_audio_transcription.completed':
+                    if (event.transcript) {
+                        addVoiceMessage('user', event.transcript);
+                    }
+                    break;
+
+                case 'response.audio.delta':
+                    if (event.delta) {
+                        await playAudioDelta(event.delta);
+                    }
+                    break;
+
+                case 'response.audio_transcript.delta':
+                    // Real-time transcript of AI speech
+                    break;
+
+                case 'response.audio_transcript.done':
+                    if (event.transcript) {
+                        addVoiceMessage('ai', event.transcript);
+                    }
+                    break;
+
+                case 'response.done':
+                    updateVoiceStatus('listening', '🎤 Your turn... Just speak');
+                    break;
+
+                case 'conversation.complete':
+                    if (event.final_prompt) {
+                        changesTextarea.value = event.final_prompt;
+                        updateVoiceStatus('complete', '✅ Got your design request!');
+
+                        setTimeout(() => {
+                            closeVoiceConversation();
+                            updateGenerateButton();
+                        }, 1500);
+                    }
+                    break;
+
+                case 'error':
+                    console.error('Realtime API error:', event);
+                    const errorMsg = event.error?.message || event.error || 'Unknown error';
+                    updateVoiceStatus('error', `Error: ${errorMsg}`);
+                    break;
             }
         }
 
-        // Send Audio to Backend
-        async function sendAudioToBackend() {
+        // Play audio delta (streaming playback)
+        async function playAudioDelta(base64Audio) {
             try {
-                // Create blob from chunks
-                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                updateVoiceStatus('speaking', '🔊 AI speaking...');
 
-                // Convert to base64
-                const reader = new FileReader();
-                const base64Audio = await new Promise((resolve) => {
-                    reader.onload = () => resolve(reader.result.split(',')[1]);
-                    reader.readAsDataURL(audioBlob);
-                });
-
-                // Send to backend
-                const response = await fetch('/voice/audio/turn', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer aR2sR_NznoXbTWYgSw1Ptr3ZJZ1VKvNjUZodjoFqxiM'
-                    },
-                    body: JSON.stringify({
-                        session_id: voiceSessionId,
-                        audio_data: base64Audio,
-                        audio_format: 'webm'
-                    })
-                });
-
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.detail || 'Failed to process audio');
-                }
-
-                const data = await response.json();
-
-                // Show AI response text
-                if (data.response_text) {
-                    addVoiceMessage('ai', data.response_text);
-                }
-
-                // Play audio response if available
-                if (data.response_audio) {
-                    await playAudioResponse(data.response_audio);
-                }
-
-                // Check if conversation is complete
-                if (data.conversation_complete && data.final_prompt) {
-                    changesTextarea.value = data.final_prompt;
-                    updateVoiceStatus('complete', 'Conversation complete! ✓');
-
-                    setTimeout(() => {
-                        closeVoiceConversation();
-                        updateGenerateButton();
-                    }, 2000);
-                } else {
-                    // Continue with next turn
-                    audioChunks = [];
-                    await startRecording();
-                }
-
-            } catch (error) {
-                console.error('Error sending audio:', error);
-                alert(`Error: ${error.message}`);
-                closeVoiceConversation();
-            }
-        }
-
-        // Play Audio Response
-        async function playAudioResponse(base64Audio) {
-            try {
-                updateVoiceStatus('speaking', 'AI is speaking...');
-
-                // Decode base64 to blob
+                // Decode base64 to PCM16
                 const binaryString = atob(base64Audio);
                 const bytes = new Uint8Array(binaryString.length);
                 for (let i = 0; i < binaryString.length; i++) {
                     bytes[i] = binaryString.charCodeAt(i);
                 }
 
-                const audioBlob = new Blob([bytes], { type: 'audio/wav' });
-                const audioUrl = URL.createObjectURL(audioBlob);
+                // Convert PCM16 to Float32 for Web Audio API
+                const pcm16 = new Int16Array(bytes.buffer);
+                const float32 = new Float32Array(pcm16.length);
+                for (let i = 0; i < pcm16.length; i++) {
+                    float32[i] = pcm16[i] / 32768;
+                }
 
-                // Play audio
-                const audio = new Audio(audioUrl);
-                await new Promise((resolve) => {
-                    audio.onended = resolve;
-                    audio.onerror = resolve;
-                    audio.play().catch(resolve);
-                });
+                // Create audio buffer and play
+                const audioBuffer = audioContext.createBuffer(1, float32.length, 24000);
+                audioBuffer.getChannelData(0).set(float32);
 
-                URL.revokeObjectURL(audioUrl);
+                const source = audioContext.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(audioContext.destination);
+                source.start();
 
             } catch (error) {
-                console.error('Error playing audio:', error);
+                console.error('Error playing audio delta:', error);
             }
         }
 
@@ -1474,7 +1513,6 @@
             messageDiv.className = `voice-message ${role}`;
             messageDiv.textContent = text;
 
-            // Remove status if it exists
             const existingStatus = voiceConversation.querySelector('.voice-status');
             if (existingStatus) {
                 existingStatus.remove();
@@ -1486,9 +1524,9 @@
 
         // Update Voice Status
         function updateVoiceStatus(type, text) {
-            const existingStatus = voiceConversation.querySelector('.voice-status');
-            if (!existingStatus) {
-                const statusDiv = document.createElement('div');
+            let statusDiv = voiceConversation.querySelector('.voice-status');
+            if (!statusDiv) {
+                statusDiv = document.createElement('div');
                 statusDiv.className = 'voice-status';
                 statusDiv.innerHTML = `
                     <div class="voice-status-icon" id="voiceStatusIcon">
@@ -1501,17 +1539,13 @@
                 voiceConversation.appendChild(statusDiv);
             }
 
-            const icon = voiceConversation.querySelector('.voice-status-icon');
-            const textEl = voiceConversation.querySelector('#voiceStatusText');
+            const icon = statusDiv.querySelector('.voice-status-icon');
+            const textEl = statusDiv.querySelector('#voiceStatusText');
 
             if (icon && textEl) {
                 icon.className = 'voice-status-icon';
-                if (type === 'listening') {
-                    icon.classList.add('listening');
-                } else if (type === 'speaking') {
-                    icon.classList.add('speaking');
-                }
-
+                if (type === 'listening') icon.classList.add('listening');
+                else if (type === 'speaking') icon.classList.add('speaking');
                 textEl.textContent = text;
             }
         }
@@ -1519,7 +1553,6 @@
         // Close Voice Conversation
         function closeVoiceConversation() {
             isVoiceActive = false;
-            isRecording = false;
             voiceModal.classList.remove('active');
 
             // Stop media recorder
@@ -1534,7 +1567,19 @@
                 audioStream = null;
             }
 
-            audioChunks = [];
+            // Close WebSocket
+            if (voiceWebSocket) {
+                voiceWebSocket.close();
+                voiceWebSocket = null;
+            }
+
+            // Close audio context
+            if (audioContext && audioContext.state !== 'closed') {
+                audioContext.close();
+            }
+            audioContext = null;
+
+            pendingAudioChunks = [];
             voiceSessionId = null;
         }
 

@@ -38,12 +38,21 @@ class RealtimeClient:
     
     def _get_websocket_url(self) -> str:
         """Construct WebSocket URL for Azure Realtime API."""
-        # Clean the endpoint - remove any trailing path or query params
-        base_url = self.endpoint.split('?')[0].rstrip('/')
+        # Clean the endpoint
+        base_url = self.endpoint
         
-        # Remove /openai/realtime if present to avoid duplication
-        if base_url.endswith('/openai/realtime'):
-            base_url = base_url[:-16]  # Remove last 16 chars
+        # Remove any query params
+        if '?' in base_url:
+            base_url = base_url.split('?')[0]
+        
+        # Remove any trailing slashes or paths
+        base_url = base_url.rstrip('/')
+        
+        # Remove common path suffixes if accidentally included
+        suffixes_to_remove = ['/openai/realtime', '/openai', '/realtime']
+        for suffix in suffixes_to_remove:
+            if base_url.endswith(suffix):
+                base_url = base_url[:-len(suffix)]
         
         # Convert protocol
         if base_url.startswith("https://"):
@@ -51,8 +60,10 @@ class RealtimeClient:
         elif base_url.startswith("http://"):
             base_url = base_url.replace("http://", "ws://")
         
-        # Azure Realtime API WebSocket endpoint
-        return f"{base_url}/openai/realtime?api-version={self.api_version}&deployment={self.deployment}"
+        # Construct final URL
+        ws_url = f"{base_url}/openai/realtime?api-version={self.api_version}&deployment={self.deployment}"
+        logger.info(f"Constructed WebSocket URL: {ws_url}")
+        return ws_url
     
     async def create_session(
         self,
