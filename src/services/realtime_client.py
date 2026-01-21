@@ -38,8 +38,14 @@ class RealtimeClient:
     
     def _get_websocket_url(self) -> str:
         """Construct WebSocket URL for Azure Realtime API."""
-        # Convert HTTPS endpoint to WSS
-        base_url = self.endpoint.rstrip('/')
+        # Clean the endpoint - remove any trailing path or query params
+        base_url = self.endpoint.split('?')[0].rstrip('/')
+        
+        # Remove /openai/realtime if present to avoid duplication
+        if base_url.endswith('/openai/realtime'):
+            base_url = base_url[:-16]  # Remove last 16 chars
+        
+        # Convert protocol
         if base_url.startswith("https://"):
             base_url = base_url.replace("https://", "wss://")
         elif base_url.startswith("http://"):
