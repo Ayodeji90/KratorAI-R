@@ -1252,19 +1252,16 @@
         }
 
         // =====================
-        // VOICE CONVERSATION - REALTIME API
+        // VOICE CONVERSATION - REST API (Audio Preview)
         // =====================
 
-        // WebSocket and Audio State
-        let voiceWebSocket = null;
+        // Audio State
         let mediaRecorder = null;
         let audioStream = null;
-        let audioContext = null;
-        let audioQueue = [];
-        let isPlayingAudio = false;
-        let currentTranscript = '';
+        let audioChunks = [];
+        let isRecording = false;
 
-        // Start Voice Conversation with WebSocket
+        // Start Voice Conversation
         async function startVoiceConversation() {
             // Check if template is selected
             if (!selectedTemplate) {
@@ -1278,44 +1275,34 @@
 
             // Clear previous conversation
             voiceConversation.innerHTML = '';
-            updateVoiceStatus('initializing', 'Connecting...');
+            updateVoiceStatus('initializing', 'Starting conversation...');
 
             try {
+                // Start session on backend
+                const response = await fetch('/voice/audio/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer aR2sR_NznoXbTWYgSw1Ptr3ZJZ1VKvNjUZodjoFqxiM'
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to start conversation');
+                }
+
+                const data = await response.json();
+                voiceSessionId = data.session_id;
+
+                // Show greeting
+                addVoiceMessage('ai', data.greeting);
+
                 // Get microphone access
                 audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-                // Connect to WebSocket
-                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                const wsUrl = `${protocol}//${window.location.host}/voice/realtime`;
-
-                voiceWebSocket = new WebSocket(wsUrl);
-
-                voiceWebSocket.onopen = async () => {
-                    console.log('WebSocket connected');
-                    updateVoiceStatus('connected', 'Connected! Starting conversation...');
-
-                    // Start recording and streaming audio
-                    await startAudioStreaming();
-                };
-
-                voiceWebSocket.onmessage = async (event) => {
-                    try {
-                        const message = JSON.parse(event.data);
-                        await handleRealtimeEvent(message);
-                    } catch (error) {
-                        console.error('Error handling message:', error);
-                    }
-                };
-
-                voiceWebSocket.onerror = (error) => {
-                    console.error('WebSocket error:', error);
-                    alert('Connection error. Please try again.');
-                    closeVoiceConversation();
-                };
-
-                voiceWebSocket.onclose = () => {
-                    console.log('WebSocket closed');
-                };
+                // Start recording
+                await startRecording();
 
             } catch (error) {
                 console.error('Error starting voice conversation:', error);
@@ -1328,167 +1315,156 @@
             }
         }
 
-        // Start Audio Streaming with MediaRecorder
-        async function startAudioStreaming() {
+        // Start Recording Audio
+        async function startRecording() {
             try {
-                // Create MediaRecorder to capture audio
+                audioChunks = [];
+
                 mediaRecorder = new MediaRecorder(audioStream, {
                     mimeType: 'audio/webm;codecs=opus'
                 });
 
-                mediaRecorder.ondataavailable = async (event) => {
-                    if (event.data.size > 0 && voiceWebSocket && voiceWebSocket.readyState === WebSocket.OPEN) {
-                        // Convert audio blob to base64
-                        const reader = new FileReader();
-                        reader.onload = () => {
-                            const base64Audio = reader.result.split(',')[1];
-
-                            // Send audio chunk to server
-                            voiceWebSocket.send(JSON.stringify({
-                                type: 'input_audio_buffer.append',
-                                audio: base64Audio
-                            }));
-                        };
-                        reader.readAsDataURL(event.data);
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
                     }
                 };
 
-                // Start recording in chunks (100ms intervals)
-                mediaRecorder.start(100);
+                mediaRecorder.onstop = async () => {
+                    if (audioChunks.length > 0) {
+                        await sendAudioToBackend();
+                    }
+                };
 
-                updateVoiceStatus('listening', 'Listening... Speak now');
-                console.log('Audio streaming started');
+                // Start recording
+                mediaRecorder.start();
+                isRecording = true;
+                updateVoiceStatus('listening', 'Listening... Click to stop');
+
+                // Add click handler to stop recording
+                const stopHandler = () => {
+                    if (isRecording && mediaRecorder && mediaRecorder.state === 'recording') {
+                        stopRecording();
+                    }
+                    voiceConversation.removeEventListener('click', stopHandler);
+                };
+                voiceConversation.addEventListener('click', stopHandler);
+
+                // Auto-stop after 10 seconds
+                setTimeout(() => {
+                    if (isRecording && mediaRecorder && mediaRecorder.state === 'recording') {
+                        stopRecording();
+                    }
+                }, 10000);
 
             } catch (error) {
-                console.error('Error starting audio streaming:', error);
-                alert(`Audio error: ${error.message}`);
+                console.error('Error starting recording:', error);
+                alert(`Recording error: ${error.message}`);
             }
         }
 
-        // Handle Realtime API Events
-        async function handleRealtimeEvent(event) {
-            console.log('Realtime event:', event.type, event);
-
-            switch (event.type) {
-                case 'session.created':
-                    voiceSessionId = event.session_id;
-                    console.log('Session created:', voiceSessionId);
-                    break;
-
-                case 'conversation.item.input_audio_transcription.completed':
-                    // User's speech was transcribed
-                    const userText = event.transcript;
-                    if (userText) {
-                        currentTranscript = userText;
-                        addVoiceMessage('user', userText);
-                    }
-                    break;
-
-                case 'response.audio.delta':
-                    // Received audio chunk from AI
-                    if (event.delta) {
-                        await playAudioChunk(event.delta);
-                    }
-                    break;
-
-                case 'response.audio_transcript.delta':
-                    // AI's speech transcript (for display)
-                    if (event.delta) {
-                        updateAITranscript(event.delta);
-                    }
-                    break;
-
-                case 'response.audio_transcript.done':
-                    // Complete AI transcript
-                    if (event.transcript) {
-                        finalizeAIMessage(event.transcript);
-                    }
-                    break;
-
-                case 'response.done':
-                    // Response complete
-                    updateVoiceStatus('listening', 'Listening... Speak now');
-                    break;
-
-                case 'conversation.complete':
-                    // Conversation is complete
-                    if (event.final_prompt) {
-                        changesTextarea.value = event.final_prompt;
-                        updateVoiceStatus('complete', 'Conversation complete! ✓');
-
-                        setTimeout(() => {
-                            closeVoiceConversation();
-                            updateGenerateButton();
-                        }, 2000);
-                    }
-                    break;
-
-                case 'error':
-                    console.error('Realtime API error:', event.error);
-                    alert(`Error: ${event.error}`);
-                    break;
+        // Stop Recording
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                isRecording = false;
+                mediaRecorder.stop();
+                updateVoiceStatus('processing', 'Processing your message...');
             }
         }
 
-        // Play Audio Chunk
-        let aiTranscriptBuffer = '';
-
-        async function playAudioChunk(base64Audio) {
+        // Send Audio to Backend
+        async function sendAudioToBackend() {
             try {
-                // Decode base64 to array buffer
+                // Create blob from chunks
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+
+                // Convert to base64
+                const reader = new FileReader();
+                const base64Audio = await new Promise((resolve) => {
+                    reader.onload = () => resolve(reader.result.split(',')[1]);
+                    reader.readAsDataURL(audioBlob);
+                });
+
+                // Send to backend
+                const response = await fetch('/voice/audio/turn', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer aR2sR_NznoXbTWYgSw1Ptr3ZJZ1VKvNjUZodjoFqxiM'
+                    },
+                    body: JSON.stringify({
+                        session_id: voiceSessionId,
+                        audio_data: base64Audio,
+                        audio_format: 'webm'
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to process audio');
+                }
+
+                const data = await response.json();
+
+                // Show AI response text
+                if (data.response_text) {
+                    addVoiceMessage('ai', data.response_text);
+                }
+
+                // Play audio response if available
+                if (data.response_audio) {
+                    await playAudioResponse(data.response_audio);
+                }
+
+                // Check if conversation is complete
+                if (data.conversation_complete && data.final_prompt) {
+                    changesTextarea.value = data.final_prompt;
+                    updateVoiceStatus('complete', 'Conversation complete! ✓');
+
+                    setTimeout(() => {
+                        closeVoiceConversation();
+                        updateGenerateButton();
+                    }, 2000);
+                } else {
+                    // Continue with next turn
+                    audioChunks = [];
+                    await startRecording();
+                }
+
+            } catch (error) {
+                console.error('Error sending audio:', error);
+                alert(`Error: ${error.message}`);
+                closeVoiceConversation();
+            }
+        }
+
+        // Play Audio Response
+        async function playAudioResponse(base64Audio) {
+            try {
+                updateVoiceStatus('speaking', 'AI is speaking...');
+
+                // Decode base64 to blob
                 const binaryString = atob(base64Audio);
                 const bytes = new Uint8Array(binaryString.length);
                 for (let i = 0; i < binaryString.length; i++) {
                     bytes[i] = binaryString.charCodeAt(i);
                 }
 
-                // Initialize audio context if needed
-                if (!audioContext) {
-                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                }
+                const audioBlob = new Blob([bytes], { type: 'audio/wav' });
+                const audioUrl = URL.createObjectURL(audioBlob);
 
-                // Decode and play audio
-                const audioBuffer = await audioContext.decodeAudioData(bytes.buffer);
-                audioQueue.push(audioBuffer);
+                // Play audio
+                const audio = new Audio(audioUrl);
+                await new Promise((resolve) => {
+                    audio.onended = resolve;
+                    audio.onerror = resolve;
+                    audio.play().catch(resolve);
+                });
 
-                if (!isPlayingAudio) {
-                    playNextAudioChunk();
-                }
+                URL.revokeObjectURL(audioUrl);
 
             } catch (error) {
                 console.error('Error playing audio:', error);
-            }
-        }
-
-        function playNextAudioChunk() {
-            if (audioQueue.length === 0) {
-                isPlayingAudio = false;
-                return;
-            }
-
-            isPlayingAudio = true;
-            const audioBuffer = audioQueue.shift();
-
-            const source = audioContext.createBufferSource();
-            source.buffer = audioBuffer;
-            source.connect(audioContext.destination);
-
-            source.onended = () => {
-                playNextAudioChunk();
-            };
-
-            source.start();
-            updateVoiceStatus('speaking', 'AI is speaking...');
-        }
-
-        function updateAITranscript(delta) {
-            aiTranscriptBuffer += delta;
-        }
-
-        function finalizeAIMessage(fullTranscript) {
-            if (fullTranscript) {
-                addVoiceMessage('ai', fullTranscript);
-                aiTranscriptBuffer = '';
             }
         }
 
@@ -1543,6 +1519,7 @@
         // Close Voice Conversation
         function closeVoiceConversation() {
             isVoiceActive = false;
+            isRecording = false;
             voiceModal.classList.remove('active');
 
             // Stop media recorder
@@ -1557,21 +1534,7 @@
                 audioStream = null;
             }
 
-            // Close WebSocket
-            if (voiceWebSocket) {
-                voiceWebSocket.close();
-                voiceWebSocket = null;
-            }
-
-            // Clear audio context
-            if (audioContext) {
-                audioContext.close();
-                audioContext = null;
-            }
-
-            audioQueue = [];
-            isPlayingAudio = false;
-            aiTranscriptBuffer = '';
+            audioChunks = [];
             voiceSessionId = null;
         }
 

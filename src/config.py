@@ -31,6 +31,12 @@ class Settings(BaseSettings):
     azure_realtime_deployment: str = "gpt-realtime-mini"  # Your deployment name
     azure_realtime_api_version: str = "2024-10-01-preview"  # Required for realtime
     
+    # Azure Audio Preview API (GPT-4o Audio for voice - REST based)
+    azure_audio_endpoint: str | None = None
+    azure_audio_key: str | None = None
+    azure_audio_deployment: str = "gpt-4o-audio-preview"
+    azure_audio_api_version: str = "2025-01-01-preview"
+    
     # Google Cloud Storage
     gcs_bucket_name: str = "kratorai-assets"
     google_application_credentials: str | None = None
