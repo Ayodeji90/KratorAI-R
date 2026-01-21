@@ -1252,52 +1252,19 @@
         }
 
         // =====================
-        // VOICE CONVERSATION
+        // VOICE CONVERSATION - REALTIME API
         // =====================
 
-        // Initialize Speech Recognition
-        function initSpeechRecognition() {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                alert('Speech recognition is not supported in your browser. Please use Chrome or Edge.');
-                return null;
-            }
+        // WebSocket and Audio State
+        let voiceWebSocket = null;
+        let mediaRecorder = null;
+        let audioStream = null;
+        let audioContext = null;
+        let audioQueue = [];
+        let isPlayingAudio = false;
+        let currentTranscript = '';
 
-            const recognition = new SpeechRecognition();
-            recognition.lang = 'en-US';
-            recognition.continuous = false;
-            recognition.interimResults = false;
-
-            recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
-                console.log('User said:', transcript);
-                addVoiceMessage('user', transcript);
-                processVoiceTurn(transcript);
-            };
-
-            recognition.onerror = (event) => {
-                console.error('Speech recognition error:', event.error);
-                if (event.error === 'no-speech') {
-                    updateVoiceStatus('listening', 'No speech detected. Try again...');
-                    setTimeout(() => recognition.start(), 1000);
-                } else {
-                    updateVoiceStatus('error', `Error: ${event.error}`);
-                }
-            };
-
-            recognition.onend = () => {
-                if (isVoiceActive && !isSpeaking) {
-                    // Restart listening after AI finishes speaking
-                    setTimeout(() => {
-                        if (isVoiceActive) recognition.start();
-                    }, 500);
-                }
-            };
-
-            return recognition;
-        }
-
-        // Start Voice Conversation
+        // Start Voice Conversation with WebSocket
         async function startVoiceConversation() {
             // Check if template is selected
             if (!selectedTemplate) {
@@ -1305,168 +1272,224 @@
                 return;
             }
 
-            // Initialize speech recognition
-            recognition = initSpeechRecognition();
-            if (!recognition) return;
-
             // Open modal
             voiceModal.classList.add('active');
             isVoiceActive = true;
 
             // Clear previous conversation
             voiceConversation.innerHTML = '';
-            updateVoiceStatus('initializing', 'Starting conversation...');
+            updateVoiceStatus('initializing', 'Connecting...');
 
             try {
-                // Call backend to start conversation
-                const response = await fetch('/voice/conversation/start', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer aR2sR_NznoXbTWYgSw1Ptr3ZJZ1VKvNjUZodjoFqxiM'
-                    },
-                    body: JSON.stringify({
-                        initial_message: null
-                    })
-                });
+                // Get microphone access
+                audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-                if (!response.ok) {
-                    throw new Error(`Failed to start conversation: ${response.statusText}`);
-                }
+                // Connect to WebSocket
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}/voice/realtime`;
 
-                const data = await response.json();
-                voiceSessionId = data.session_id;
+                voiceWebSocket = new WebSocket(wsUrl);
 
-                // Show AI greeting
-                const aiText = data.ai_response.text;
-                addVoiceMessage('ai', aiText);
-                await speakText(aiText);
+                voiceWebSocket.onopen = async () => {
+                    console.log('WebSocket connected');
+                    updateVoiceStatus('connected', 'Connected! Starting conversation...');
 
-                // Start listening
-                updateVoiceStatus('listening', 'Listening... Speak now');
-                recognition.start();
+                    // Start recording and streaming audio
+                    await startAudioStreaming();
+                };
+
+                voiceWebSocket.onmessage = async (event) => {
+                    try {
+                        const message = JSON.parse(event.data);
+                        await handleRealtimeEvent(message);
+                    } catch (error) {
+                        console.error('Error handling message:', error);
+                    }
+                };
+
+                voiceWebSocket.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    alert('Connection error. Please try again.');
+                    closeVoiceConversation();
+                };
+
+                voiceWebSocket.onclose = () => {
+                    console.log('WebSocket closed');
+                };
 
             } catch (error) {
                 console.error('Error starting voice conversation:', error);
-                alert(`Failed to start voice conversation: ${error.message}`);
-                closeVoiceConversation();
-            }
-        }
-
-        // Process Voice Turn
-        async function processVoiceTurn(userText) {
-            updateVoiceStatus('processing', 'Processing...');
-
-            try {
-                const response = await fetch('/voice/conversation/turn', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer aR2sR_NznoXbTWYgSw1Ptr3ZJZ1VKvNjUZodjoFqxiM'
-                    },
-                    body: JSON.stringify({
-                        session_id: voiceSessionId,
-                        user_text: userText
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Failed to process turn: ${response.statusText}`);
-                }
-
-                const data = await response.json();
-
-                // Show AI response
-                const aiText = data.ai_response.text;
-                addVoiceMessage('ai', aiText);
-                await speakText(aiText);
-
-                // Check if conversation is complete
-                if (data.conversation_complete) {
-                    // Get final prompt
-                    await confirmAndGetPrompt();
+                if (error.name === 'NotAllowedError') {
+                    alert('Microphone access denied. Please allow microphone access to use voice assistant.');
                 } else {
-                    // Continue listening
-                    updateVoiceStatus('listening', 'Listening... Speak now');
+                    alert(`Failed to start voice conversation: ${error.message}`);
                 }
-
-            } catch (error) {
-                console.error('Error processing voice turn:', error);
-                alert(`Error: ${error.message}`);
                 closeVoiceConversation();
             }
         }
 
-        // Confirm and Get Final Prompt
-        async function confirmAndGetPrompt() {
+        // Start Audio Streaming with MediaRecorder
+        async function startAudioStreaming() {
             try {
-                const response = await fetch('/voice/conversation/confirm', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer aR2sR_NznoXbTWYgSw1Ptr3ZJZ1VKvNjUZodjoFqxiM'
-                    },
-                    body: JSON.stringify({
-                        session_id: voiceSessionId,
-                        confirmed: true
-                    })
+                // Create MediaRecorder to capture audio
+                mediaRecorder = new MediaRecorder(audioStream, {
+                    mimeType: 'audio/webm;codecs=opus'
                 });
 
-                if (!response.ok) {
-                    throw new Error(`Failed to confirm: ${response.statusText}`);
-                }
+                mediaRecorder.ondataavailable = async (event) => {
+                    if (event.data.size > 0 && voiceWebSocket && voiceWebSocket.readyState === WebSocket.OPEN) {
+                        // Convert audio blob to base64
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                            const base64Audio = reader.result.split(',')[1];
 
-                const data = await response.json();
+                            // Send audio chunk to server
+                            voiceWebSocket.send(JSON.stringify({
+                                type: 'input_audio_buffer.append',
+                                audio: base64Audio
+                            }));
+                        };
+                        reader.readAsDataURL(event.data);
+                    }
+                };
 
-                // Populate textarea with the generated prompt
-                changesTextarea.value = data.execution_params.prompt;
+                // Start recording in chunks (100ms intervals)
+                mediaRecorder.start(100);
 
-                updateVoiceStatus('complete', 'Conversation complete! ✓');
-
-                // Show success message
-                await speakText('Perfect! I\'ve filled in your design changes. You can now generate your design.');
-
-                // Close modal after a delay
-                setTimeout(() => {
-                    closeVoiceConversation();
-                    updateGenerateButton(); // Enable generate button if needed
-                }, 3000);
+                updateVoiceStatus('listening', 'Listening... Speak now');
+                console.log('Audio streaming started');
 
             } catch (error) {
-                console.error('Error confirming conversation:', error);
-                alert(`Error: ${error.message}`);
+                console.error('Error starting audio streaming:', error);
+                alert(`Audio error: ${error.message}`);
             }
         }
 
-        // Text-to-Speech
-        function speakText(text) {
-            return new Promise((resolve) => {
-                if (!window.speechSynthesis) {
-                    console.warn('Text-to-speech not supported');
-                    resolve();
-                    return;
+        // Handle Realtime API Events
+        async function handleRealtimeEvent(event) {
+            console.log('Realtime event:', event.type, event);
+
+            switch (event.type) {
+                case 'session.created':
+                    voiceSessionId = event.session_id;
+                    console.log('Session created:', voiceSessionId);
+                    break;
+
+                case 'conversation.item.input_audio_transcription.completed':
+                    // User's speech was transcribed
+                    const userText = event.transcript;
+                    if (userText) {
+                        currentTranscript = userText;
+                        addVoiceMessage('user', userText);
+                    }
+                    break;
+
+                case 'response.audio.delta':
+                    // Received audio chunk from AI
+                    if (event.delta) {
+                        await playAudioChunk(event.delta);
+                    }
+                    break;
+
+                case 'response.audio_transcript.delta':
+                    // AI's speech transcript (for display)
+                    if (event.delta) {
+                        updateAITranscript(event.delta);
+                    }
+                    break;
+
+                case 'response.audio_transcript.done':
+                    // Complete AI transcript
+                    if (event.transcript) {
+                        finalizeAIMessage(event.transcript);
+                    }
+                    break;
+
+                case 'response.done':
+                    // Response complete
+                    updateVoiceStatus('listening', 'Listening... Speak now');
+                    break;
+
+                case 'conversation.complete':
+                    // Conversation is complete
+                    if (event.final_prompt) {
+                        changesTextarea.value = event.final_prompt;
+                        updateVoiceStatus('complete', 'Conversation complete! ✓');
+
+                        setTimeout(() => {
+                            closeVoiceConversation();
+                            updateGenerateButton();
+                        }, 2000);
+                    }
+                    break;
+
+                case 'error':
+                    console.error('Realtime API error:', event.error);
+                    alert(`Error: ${event.error}`);
+                    break;
+            }
+        }
+
+        // Play Audio Chunk
+        let aiTranscriptBuffer = '';
+
+        async function playAudioChunk(base64Audio) {
+            try {
+                // Decode base64 to array buffer
+                const binaryString = atob(base64Audio);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
                 }
 
-                isSpeaking = true;
-                updateVoiceStatus('speaking', 'AI is speaking...');
+                // Initialize audio context if needed
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
 
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'en-US';
-                utterance.rate = 1.0;
-                utterance.pitch = 1.0;
+                // Decode and play audio
+                const audioBuffer = await audioContext.decodeAudioData(bytes.buffer);
+                audioQueue.push(audioBuffer);
 
-                utterance.onend = () => {
-                    isSpeaking = false;
-                    resolve();
-                };
+                if (!isPlayingAudio) {
+                    playNextAudioChunk();
+                }
 
-                utterance.onerror = () => {
-                    isSpeaking = false;
-                    resolve();
-                };
+            } catch (error) {
+                console.error('Error playing audio:', error);
+            }
+        }
 
-                window.speechSynthesis.speak(utterance);
-            });
+        function playNextAudioChunk() {
+            if (audioQueue.length === 0) {
+                isPlayingAudio = false;
+                return;
+            }
+
+            isPlayingAudio = true;
+            const audioBuffer = audioQueue.shift();
+
+            const source = audioContext.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(audioContext.destination);
+
+            source.onended = () => {
+                playNextAudioChunk();
+            };
+
+            source.start();
+            updateVoiceStatus('speaking', 'AI is speaking...');
+        }
+
+        function updateAITranscript(delta) {
+            aiTranscriptBuffer += delta;
+        }
+
+        function finalizeAIMessage(fullTranscript) {
+            if (fullTranscript) {
+                addVoiceMessage('ai', fullTranscript);
+                aiTranscriptBuffer = '';
+            }
         }
 
         // Add Voice Message to UI
@@ -1487,7 +1510,6 @@
 
         // Update Voice Status
         function updateVoiceStatus(type, text) {
-            // Remove existing messages to show status
             const existingStatus = voiceConversation.querySelector('.voice-status');
             if (!existingStatus) {
                 const statusDiv = document.createElement('div');
@@ -1507,7 +1529,6 @@
             const textEl = voiceConversation.querySelector('#voiceStatusText');
 
             if (icon && textEl) {
-                // Update icon class based on type
                 icon.className = 'voice-status-icon';
                 if (type === 'listening') {
                     icon.classList.add('listening');
@@ -1522,18 +1543,35 @@
         // Close Voice Conversation
         function closeVoiceConversation() {
             isVoiceActive = false;
-            isSpeaking = false;
             voiceModal.classList.remove('active');
 
-            if (recognition) {
-                recognition.stop();
-                recognition = null;
+            // Stop media recorder
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+            mediaRecorder = null;
+
+            // Stop audio stream
+            if (audioStream) {
+                audioStream.getTracks().forEach(track => track.stop());
+                audioStream = null;
             }
 
-            if (window.speechSynthesis) {
-                window.speechSynthesis.cancel();
+            // Close WebSocket
+            if (voiceWebSocket) {
+                voiceWebSocket.close();
+                voiceWebSocket = null;
             }
 
+            // Clear audio context
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+
+            audioQueue = [];
+            isPlayingAudio = false;
+            aiTranscriptBuffer = '';
             voiceSessionId = null;
         }
 

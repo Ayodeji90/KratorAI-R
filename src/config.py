@@ -25,6 +25,12 @@ class Settings(BaseSettings):
     openai_max_tokens: int = 2000
     openai_temperature: float = 0.0  # Deterministic reasoning
     
+    # Azure Realtime API (GPT-4o Realtime for voice)
+    azure_realtime_endpoint: str | None = None
+    azure_realtime_key: str | None = None
+    azure_realtime_deployment: str = "gpt-realtime-mini"  # Your deployment name
+    azure_realtime_api_version: str = "2024-10-01-preview"  # Required for realtime
+    
     # Google Cloud Storage
     gcs_bucket_name: str = "kratorai-assets"
     google_application_credentials: str | None = None

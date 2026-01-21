@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, JSONResponse
 
 from src.config import get_settings
-from src.api.routes import breed, refine, edit, agent, describe, template, voice
+from src.api.routes import breed, refine, edit, agent, describe, template, voice, voice_realtime
 from src.utils.logging import setup_logging, get_logger
 
 logger = get_logger(__name__)
@@ -151,6 +151,7 @@ app.include_router(agent.router, prefix="/agent", tags=["AI Agent"])
 app.include_router(describe.router, prefix="", tags=["Design Description"])
 app.include_router(template.router, prefix="/template", tags=["Template Editing"])
 app.include_router(voice.router, prefix="/voice", tags=["Voice Conversation"])
+app.include_router(voice_realtime.router, prefix="/voice", tags=["Voice Realtime"])
 
 
 @app.get("/")
