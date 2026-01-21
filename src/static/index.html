@@ -1474,11 +1474,14 @@
             }
         }
 
-        // Play audio delta (streaming playback)
+        // Audio queue for sequential playback
+        let audioQueue = [];
+        let isPlayingQueue = false;
+        let nextPlayTime = 0;
+
+        // Play audio delta (queued sequential playback)
         async function playAudioDelta(base64Audio) {
             try {
-                updateVoiceStatus('speaking', '🔊 AI speaking...');
-
                 // Decode base64 to PCM16
                 const binaryString = atob(base64Audio);
                 const bytes = new Uint8Array(binaryString.length);
@@ -1493,18 +1496,53 @@
                     float32[i] = pcm16[i] / 32768;
                 }
 
-                // Create audio buffer and play
+                // Create audio buffer
                 const audioBuffer = audioContext.createBuffer(1, float32.length, 24000);
                 audioBuffer.getChannelData(0).set(float32);
 
-                const source = audioContext.createBufferSource();
-                source.buffer = audioBuffer;
-                source.connect(audioContext.destination);
-                source.start();
+                // Add to queue
+                audioQueue.push(audioBuffer);
+
+                // Start playing if not already
+                if (!isPlayingQueue) {
+                    playFromQueue();
+                }
 
             } catch (error) {
-                console.error('Error playing audio delta:', error);
+                console.error('Error processing audio delta:', error);
             }
+        }
+
+        // Play audio buffers sequentially from queue
+        function playFromQueue() {
+            if (audioQueue.length === 0) {
+                isPlayingQueue = false;
+                return;
+            }
+
+            isPlayingQueue = true;
+            updateVoiceStatus('speaking', '🔊 AI speaking...');
+
+            const audioBuffer = audioQueue.shift();
+            const source = audioContext.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(audioContext.destination);
+
+            // Schedule to play at the right time to avoid gaps
+            const currentTime = audioContext.currentTime;
+            const startTime = Math.max(currentTime, nextPlayTime);
+
+            source.start(startTime);
+            nextPlayTime = startTime + audioBuffer.duration;
+
+            // When this chunk ends, play the next
+            source.onended = () => {
+                if (audioQueue.length > 0) {
+                    playFromQueue();
+                } else {
+                    isPlayingQueue = false;
+                }
+            };
         }
 
         // Add Voice Message to UI
@@ -1579,7 +1617,10 @@
             }
             audioContext = null;
 
-            pendingAudioChunks = [];
+            // Reset audio queue
+            audioQueue = [];
+            isPlayingQueue = false;
+            nextPlayTime = 0;
             voiceSessionId = null;
         }
 
