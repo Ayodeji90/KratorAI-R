@@ -137,21 +137,18 @@ async def voice_realtime(websocket: WebSocket):
                     # Forward all events to client
                     await websocket.send_json(event)
                     
-                    # Check for conversation completion
-                    if event.get("type") == "conversation.item.completed":
-                        # Check if AI has enough information
-                        item = event.get("item", {})
-                        content = item.get("content", [])
+                    # Check for conversation completion via audio transcript
+                    # The AI's spoken text comes through response.audio_transcript.done
+                    if event.get("type") == "response.audio_transcript.done":
+                        transcript = event.get("transcript", "")
                         
-                        for c in content:
-                            if c.get("type") == "text":
-                                text = c.get("text", "")
-                                # If AI is asking for confirmation, prepare final prompt
-                                if "should i proceed" in text.lower() or "shall i proceed" in text.lower():
-                                    await websocket.send_json({
-                                        "type": "conversation.complete",
-                                        "final_prompt": text
-                                    })
+                        # If AI is asking for confirmation, prepare final prompt
+                        if "should i proceed" in transcript.lower() or "shall i proceed" in transcript.lower():
+                            logger.info(f"Detected prompt confirmation: {transcript[:100]}...")
+                            await websocket.send_json({
+                                "type": "conversation.complete",
+                                "final_prompt": transcript
+                            })
                     
             except WebSocketDisconnect:
                 logger.info(f"Realtime API disconnected: {session_id}")
