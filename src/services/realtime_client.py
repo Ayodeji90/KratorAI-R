@@ -118,9 +118,10 @@ class RealtimeClient:
                     },
                     "turn_detection": {
                         "type": "server_vad",
-                        "threshold": 0.5,
-                        "prefix_padding_ms": 300,
-                        "silence_duration_ms": 500
+                        "threshold": 0.8,  # Higher = less sensitive to background noise
+                        "prefix_padding_ms": 500,  # More padding before speech
+                        "silence_duration_ms": 1000,  # Require 1 second of silence to end turn
+                        "create_response": True  # Still auto-respond but with stricter detection
                     },
                     "temperature": temperature
                 }

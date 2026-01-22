@@ -1320,6 +1320,7 @@
         let isPlayingAudio = false;
         let pendingAudioChunks = [];
         let isMicMuted = false;  // Mute mic while AI is speaking to prevent feedback
+        let isResponseDone = false; // Track if server has finished sending audio
 
         // Start Voice Conversation with WebSocket
         async function startVoiceConversation() {
@@ -1497,6 +1498,7 @@
                     // Mute mic while AI is speaking to prevent feedback loop
                     if (!isMicMuted) {
                         isMicMuted = true;
+                        isResponseDone = false;
                         console.log('Mic muted - AI speaking');
                     }
                     if (event.delta) {
@@ -1515,10 +1517,18 @@
                     break;
 
                 case 'response.done':
-                    // Unmute mic after AI finishes speaking
-                    isMicMuted = false;
-                    console.log('Mic unmuted - user turn');
-                    updateVoiceStatus('listening', '🎤 Your turn... Just speak');
+                    // Server is done sending, but audio might still be playing from queue
+                    isResponseDone = true;
+                    console.log('Server response done - waiting for playback to finish');
+
+                    // If nothing is playing, we can unmute now
+                    if (!isPlayingQueue && audioQueue.length === 0) {
+                        setTimeout(() => {
+                            isMicMuted = false;
+                            console.log('Mic unmuted - nothing playing');
+                            updateVoiceStatus('listening', '🎤 Your turn... Just speak');
+                        }, 300);
+                    }
                     break;
 
                 case 'conversation.complete':
@@ -1625,6 +1635,14 @@
                     playFromQueue();
                 } else {
                     isPlayingQueue = false;
+                    // If server is also done, we can finally unmute
+                    if (isResponseDone) {
+                        setTimeout(() => {
+                            isMicMuted = false;
+                            console.log('Mic unmuted - playback finished');
+                            updateVoiceStatus('listening', '🎤 Your turn... Just speak');
+                        }, 300); // 300ms safety delay for echo tails
+                    }
                 }
             };
         }
