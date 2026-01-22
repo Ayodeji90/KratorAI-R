@@ -1319,6 +1319,7 @@
         let audioSourceNodes = [];
         let isPlayingAudio = false;
         let pendingAudioChunks = [];
+        let isMicMuted = false;  // Mute mic while AI is speaking to prevent feedback
 
         // Start Voice Conversation with WebSocket
         async function startVoiceConversation() {
@@ -1404,7 +1405,8 @@
                 const processor = audioContext.createScriptProcessor(4096, 1, 1);
 
                 processor.onaudioprocess = (e) => {
-                    if (!isVoiceActive || !voiceWebSocket || voiceWebSocket.readyState !== WebSocket.OPEN) {
+                    // Don't send audio while AI is speaking (prevents feedback loop)
+                    if (!isVoiceActive || !voiceWebSocket || voiceWebSocket.readyState !== WebSocket.OPEN || isMicMuted) {
                         return;
                     }
 
@@ -1448,7 +1450,8 @@
             });
 
             mediaRecorder.ondataavailable = async (event) => {
-                if (event.data.size > 0 && voiceWebSocket && voiceWebSocket.readyState === WebSocket.OPEN) {
+                // Don't send audio while AI is speaking (prevents feedback loop)
+                if (event.data.size > 0 && voiceWebSocket && voiceWebSocket.readyState === WebSocket.OPEN && !isMicMuted) {
                     const reader = new FileReader();
                     reader.onload = () => {
                         const base64Audio = reader.result.split(',')[1];
@@ -1491,6 +1494,11 @@
                     break;
 
                 case 'response.audio.delta':
+                    // Mute mic while AI is speaking to prevent feedback loop
+                    if (!isMicMuted) {
+                        isMicMuted = true;
+                        console.log('Mic muted - AI speaking');
+                    }
                     if (event.delta) {
                         await playAudioDelta(event.delta);
                     }
@@ -1507,6 +1515,9 @@
                     break;
 
                 case 'response.done':
+                    // Unmute mic after AI finishes speaking
+                    isMicMuted = false;
+                    console.log('Mic unmuted - user turn');
                     updateVoiceStatus('listening', '🎤 Your turn... Just speak');
                     break;
 
