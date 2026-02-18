@@ -37,7 +37,8 @@ async def start_conversation(request: VoiceConversationStart):
     """
     try:
         session_id, ai_response = voice_service.start_conversation(
-            initial_message=request.initial_message
+            initial_message=request.initial_message,
+            context=request.context
         )
         
         conversation = voice_service.get_conversation(session_id)

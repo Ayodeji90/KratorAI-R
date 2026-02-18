@@ -7,7 +7,7 @@ Manages multi-turn dialogues, extracts information, and constructs prompts.
 
 import json
 import uuid
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, Any
 from datetime import datetime
 
 from src.services.o3_mini_client import O3MiniClient
@@ -20,12 +20,11 @@ from src.api.schemas.voice import (
     ConversationState
 )
 from src.prompts.voice_prompts import (
-    VOICE_CONVERSATION_SYSTEM_PROMPT,
-    FIRST_QUESTION_TEMPLATES,
     CONFIRMATION_TEMPLATE,
     COMPLETENESS_REQUIREMENTS,
     MAX_CONVERSATION_TURNS,
-    DEFAULT_PROMPT_TEMPLATES
+    DEFAULT_PROMPT_TEMPLATES,
+    EDITING_TECHNICAL_GUIDELINES  # New import
 )
 from src.utils.logging import get_logger
 
@@ -40,12 +39,17 @@ class VoiceConversationService:
         # In-memory session storage (use Redis in production)
         self.sessions: Dict[str, VoiceConversationHistory] = {}
     
-    def start_conversation(self, initial_message: Optional[str] = None) -> Tuple[str, AIResponse]:
+    def start_conversation(
+        self, 
+        initial_message: Optional[str] = None,
+        context: Optional[Dict[str, Any]] = None
+    ) -> Tuple[str, AIResponse]:
         """
         Start a new voice conversation session.
         
         Args:
             initial_message: Optional initial user message
+            context: Optional context from frontend (template_id, etc.)
             
         Returns:
             Tuple of (session_id, ai_response)
@@ -61,9 +65,20 @@ class VoiceConversationService:
             turn_count=0
         )
         
-        # If there's an initial message, process it
+        # Pre-fill info from context
+        if context:
+            if "template_id" in context:
+                conversation.extracted_info.intent = "template"
+                conversation.extracted_info.additional_details = f"Based on template: {context['template_id']}"
+            
+            if "design_type" in context:
+                conversation.extracted_info.design_type = context["design_type"]
+
+        # Generate first response
         if initial_message:
             ai_response_text = self._generate_first_response(initial_message, conversation)
+        elif context and context.get("template_id"):
+            ai_response_text = "Great choice! How would you like to customize this template?"
         else:
             ai_response_text = "Hi! I'm here to help you create or edit your design. What would you like to make today?"
         
@@ -143,7 +158,14 @@ class VoiceConversationService:
             action=conversation.extracted_info.intent or "refine",
             prompt=prompt,
             strength=conversation.extracted_info.strength,
-            num_variations=conversation.extracted_info.num_variations
+            num_variations=conversation.extracted_info.num_variations,
+            additional_params={
+                "edit_type": conversation.extracted_info.edit_type,
+                "mask_region": conversation.extracted_info.mask_region,
+                "design_type": conversation.extracted_info.design_type,
+                "style": conversation.extracted_info.style,
+                "colors": conversation.extracted_info.colors
+            }
         )
         
         logger.info(f"Prepared execution for session {session_id}: {execution_params.action}")
@@ -227,6 +249,9 @@ class VoiceConversationService:
 {context}
 
 User's latest message: {user_text}
+
+REFERENCE GUIDELINES:
+{EDITING_TECHNICAL_GUIDELINES}
 
 Respond with JSON containing ai_message, extracted_info, and conversation_complete."""
         
@@ -349,6 +374,23 @@ Respond with JSON containing ai_message, extracted_info, and conversation_comple
     
     def _construct_prompt(self, info: ExtractedDesignInfo) -> str:
         """Construct optimized image generation prompt from extracted info."""
+        # Special handling for editing
+        if info.intent == "edit":
+            # If it's an edit, we want the prompt to be the INSTRUCTION
+            # The additional_details field should contain the technical instruction constructed by the LLM
+            if info.additional_details:
+                return info.additional_details
+            
+            # Fallback if LLM didn't put it in additional_details
+            parts = []
+            if info.text_content:
+                parts.append(f"Change text to '{info.text_content}'")
+            if info.colors:
+                parts.append(f"Change colors to {', '.join(info.colors)}")
+            if info.style:
+                parts.append(f"Apply {info.style} style")
+            return ", ".join(parts) or "Make the requested edits."
+
         prompt_parts = []
         
         # Start with base description

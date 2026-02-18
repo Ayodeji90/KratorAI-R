@@ -9,6 +9,7 @@ class VoiceConversationStart(BaseModel):
     """Request to start a new voice conversation."""
     user_id: Optional[str] = Field(None, description="Optional user identifier for tracking")
     initial_message: Optional[str] = Field(None, description="Optional initial user message")
+    context: Optional[Dict[str, Any]] = Field(None, description="Context from frontend (e.g. selected_template, user_data)")
 
 
 class VoiceConversationTurn(BaseModel):
@@ -44,7 +45,10 @@ class ExtractedDesignInfo(BaseModel):
     dimensions: Optional[str] = Field(None, description="Size/dimensions preference")
     additional_details: Optional[str] = Field(None, description="Any other relevant details")
     strength: float = Field(0.7, ge=0.0, le=1.0, description="Refinement strength")
+    strength: float = Field(0.7, ge=0.0, le=1.0, description="Refinement strength")
     num_variations: int = Field(3, ge=1, le=5, description="Number of variations to generate")
+    edit_type: Optional[str] = Field("inpaint", description="Type of edit: inpaint, style_transfer, etc.")
+    mask_region: Optional[str] = Field(None, description="Region to mask for inpainting (e.g. 'background', 'face')")
 
 
 class AIResponse(BaseModel):

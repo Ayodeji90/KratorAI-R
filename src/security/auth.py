@@ -14,6 +14,7 @@ Usage:
 
 from fastapi import HTTPException, Security, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from typing import Optional
 
 from src.config import get_settings
 from src.utils.logging import get_logger
@@ -21,34 +22,45 @@ from src.utils.logging import get_logger
 logger = get_logger(__name__)
 
 # HTTPBearer automatically handles the Authorization header parsing
-# and returns 401 if the header is missing or malformed
-security = HTTPBearer()
+# Set auto_error=False to handle missing headers manually (needed for dev bypass)
+security = HTTPBearer(auto_error=False)
 
 
 async def verify_token(
-    credentials: HTTPAuthorizationCredentials = Security(security)
+    credentials: Optional[HTTPAuthorizationCredentials] = Security(security)
 ) -> str:
     """
     Verify Bearer token against the configured backend token.
     
     This dependency automatically:
-    - Returns 401 if Authorization header is missing
-    - Returns 401 if Authorization header is malformed
+    - Bypasses check if environment is 'development'
+    - Returns 401 if Authorization header is missing (in prod)
     - Returns 403 if token is invalid
     
     Args:
         credentials: Automatically extracted from Authorization header
         
     Returns:
-        The validated token string
+        The validated token string (or dummy token in dev)
         
     Raises:
-        HTTPException: 403 if token is invalid
+        HTTPException: 401/403 if authentication fails
     """
     settings = get_settings()
     
+    # Bypass authentication in development
+    if settings.environment == "development" or settings.debug:
+        return settings.backend_token
+        
+    if not credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing authentication credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
     if credentials.credentials != settings.backend_token:
-        logger.warning(f"Invalid token attempt from credential")
+        logger.warning(f"Invalid token attempt")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Invalid authentication token"

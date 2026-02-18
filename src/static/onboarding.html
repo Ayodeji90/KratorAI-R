@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KratorAI – Business Onboarding</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ============ RESET & BASE ============ */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a2e;
+            --accent: #6c63ff;
+            --accent-glow: rgba(108, 99, 255, 0.4);
+            --accent-2: #a78bfa;
+            --text-primary: #f0f0f5;
+            --text-secondary: #8888a0;
+            --text-muted: #555570;
+            --border: rgba(255, 255, 255, 0.06);
+            --success: #22c55e;
+            --error: #ef4444;
+            --radius: 16px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ============ PHASE 1: REGISTRATION ============ */
+        #registrationPhase {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 24px;
+            background: radial-gradient(ellipse at 50% 0%, rgba(108, 99, 255, 0.08) 0%, transparent 60%);
+        }
+
+        .reg-container {
+            width: 100%;
+            max-width: 480px;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo-area {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo-area h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), var(--accent-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .logo-area p {
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        .reg-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 36px;
+            backdrop-filter: blur(20px);
+        }
+
+        .reg-card h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .reg-card .subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .form-group input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.2s;
+            margin-top: 8px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px var(--accent-glow);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        /* ============ PHASE 2: VOICE CALL ============ */
+        #voicePhase {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 32px 24px;
+            background: var(--bg-primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Ambient background glow */
+        #voicePhase::before {
+            content: '';
+            position: absolute;
+            top: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(108, 99, 255, 0.12) 0%, transparent 70%);
+            pointer-events: none;
+            animation: ambientPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes ambientPulse {
+
+            0%,
+            100% {
+                opacity: 0.6;
+                transform: translateX(-50%) scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: translateX(-50%) scale(1.1);
+            }
+        }
+
+        .voice-header {
+            text-align: center;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .voice-header h2 {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .voice-header .session-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* ---- ORB ---- */
+        .orb-container {
+            position: relative;
+            width: 220px;
+            height: 220px;
+            margin: 40px auto 28px;
+            z-index: 2;
+        }
+
+        .orb {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 40% 40%, #8b5cf6, var(--accent), #4338ca);
+            box-shadow:
+                0 0 60px var(--accent-glow),
+                0 0 120px rgba(108, 99, 255, 0.15),
+                inset 0 0 40px rgba(255, 255, 255, 0.05);
+            animation: orbIdle 3s ease-in-out infinite;
+            transition: box-shadow 0.4s, transform 0.4s;
+        }
+
+        /* Orb States */
+        @keyframes orbIdle {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.03);
+            }
+        }
+
+        @keyframes orbListening {
+
+            0%,
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 60px var(--accent-glow), 0 0 120px rgba(108, 99, 255, 0.15);
+            }
+
+            50% {
+                transform: scale(1.06);
+                box-shadow: 0 0 80px var(--accent-glow), 0 0 160px rgba(108, 99, 255, 0.25);
+            }
+        }
+
+        @keyframes orbSpeaking {
+            0% {
+                transform: scale(1);
+            }
+
+            25% {
+                transform: scale(1.08);
+            }
+
+            50% {
+                transform: scale(0.97);
+            }
+
+            75% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .orb.listening {
+            animation: orbListening 1.5s ease-in-out infinite;
+            box-shadow:
+                0 0 80px rgba(34, 197, 94, 0.3),
+                0 0 140px rgba(34, 197, 94, 0.12),
+                inset 0 0 40px rgba(255, 255, 255, 0.05);
+            background: radial-gradient(circle at 40% 40%, #22c55e, #16a34a, #15803d);
+        }
+
+        .orb.speaking {
+            animation: orbSpeaking 0.8s ease-in-out infinite;
+            box-shadow:
+                0 0 100px var(--accent-glow),
+                0 0 180px rgba(108, 99, 255, 0.2),
+                inset 0 0 60px rgba(255, 255, 255, 0.08);
+        }
+
+        .orb.processing {
+            animation: orbSpeaking 1.2s ease-in-out infinite;
+            background: radial-gradient(circle at 40% 40%, #f59e0b, #d97706, #b45309);
+            box-shadow:
+                0 0 80px rgba(245, 158, 11, 0.3),
+                0 0 140px rgba(245, 158, 11, 0.12),
+                inset 0 0 40px rgba(255, 255, 255, 0.05);
+        }
+
+        .orb.error {
+            background: radial-gradient(circle at 40% 40%, #ef4444, #dc2626, #b91c1c);
+            box-shadow:
+                0 0 60px rgba(239, 68, 68, 0.3),
+                0 0 120px rgba(239, 68, 68, 0.12);
+            animation: orbIdle 2s ease-in-out infinite;
+        }
+
+        /* Ring around orb */
+        .orb-ring {
+            position: absolute;
+            top: -12px;
+            left: -12px;
+            right: -12px;
+            bottom: -12px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(108, 99, 255, 0.15);
+            animation: ringPulse 3s ease-in-out infinite;
+        }
+
+        .orb-ring:nth-child(2) {
+            top: -24px;
+            left: -24px;
+            right: -24px;
+            bottom: -24px;
+            border-color: rgba(108, 99, 255, 0.08);
+            animation-delay: 0.5s;
+        }
+
+        @keyframes ringPulse {
+
+            0%,
+            100% {
+                opacity: 0.5;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.02);
+            }
+        }
+
+        /* Status text below orb */
+        .status-text {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            z-index: 2;
+            min-height: 24px;
+            transition: color 0.3s;
+        }
+
+        .status-text.active {
+            color: var(--text-primary);
+        }
+
+        /* ---- TRANSCRIPT ---- */
+        .transcript-area {
+            width: 100%;
+            max-width: 560px;
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 8px 100px;
+            z-index: 2;
+            -ms-overflow-style: none;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+        }
+
+        .msg {
+            margin-bottom: 16px;
+            animation: msgIn 0.3s ease;
+        }
+
+        @keyframes msgIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .msg-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .msg.user .msg-label {
+            color: var(--success);
+        }
+
+        .msg.ai .msg-label {
+            color: var(--accent-2);
+        }
+
+        .msg-text {
+            font-size: 15px;
+            line-height: 1.55;
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 16px;
+        }
+
+        .msg.ai .msg-text {
+            background: rgba(108, 99, 255, 0.06);
+            border-color: rgba(108, 99, 255, 0.12);
+        }
+
+        /* ---- END CALL BUTTON ---- */
+        .end-call-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            background: linear-gradient(transparent, var(--bg-primary) 40%);
+            z-index: 10;
+        }
+
+        .end-call-btn {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: var(--error);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .end-call-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 6px 30px rgba(239, 68, 68, 0.45);
+        }
+
+        .end-call-btn svg {
+            width: 28px;
+            height: 28px;
+            fill: white;
+        }
+
+        /* ============ TRANSITIONS ============ */
+        .phase-exit {
+            animation: phaseOut 0.4s ease forwards;
+        }
+
+        @keyframes phaseOut {
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+
+        .phase-enter {
+            animation: phaseIn 0.5s ease;
+        }
+
+        @keyframes phaseIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 520px) {
+            .reg-card {
+                padding: 24px;
+            }
+
+            .orb-container {
+                width: 160px;
+                height: 160px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- =============== PHASE 1: REGISTRATION =============== -->
+    <section id="registrationPhase">
+        <div class="reg-container">
+            <div class="logo-area">
+                <h1>KratorAI</h1>
+                <p>Register your business to get started</p>
+            </div>
+
+            <div class="reg-card">
+                <h2>Business Registration</h2>
+                <p class="subtitle">We'll set up your profile through a quick AI voice interview</p>
+
+                <form id="regForm">
+                    <div class="form-group">
+                        <label for="bizName">Business Name</label>
+                        <input type="text" id="bizName" placeholder="e.g. Ade's Kitchen" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="bizEmail">Email Address</label>
+                        <input type="email" id="bizEmail" placeholder="you@example.com" required>
+                    </div>
+                    <button type="submit" class="submit-btn">Register & Start Voice Interview →</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- =============== PHASE 2: VOICE CALL =============== -->
+    <section id="voicePhase">
+        <div class="voice-header">
+            <h2>AI Business Consultant</h2>
+            <div class="session-label" id="sessionLabel">Connecting...</div>
+        </div>
+
+        <div class="orb-container">
+            <div class="orb-ring"></div>
+            <div class="orb-ring"></div>
+            <div class="orb" id="orb"></div>
+        </div>
+
+        <div class="status-text" id="statusText">Initializing...</div>
+
+        <div class="transcript-area" id="transcriptArea"></div>
+
+        <div class="end-call-bar">
+            <button class="end-call-btn" id="endCallBtn" title="End Call">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08a.956.956 0 010-1.36C3.15 9.15 7.32 7.5 12 7.5s8.85 1.65 11.71 4.22c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.1-.7-.28a11.27 11.27 0 00-2.67-1.85.996.996 0 01-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z" />
+                </svg>
+            </button>
+        </div>
+    </section>
+
+    <script>
+        // =============================================
+        //  STATE
+        // =============================================
+        let voiceWebSocket = null;
+        let audioStream = null;
+        let audioContext = null;
+        let isVoiceActive = false;
+        let isMicMuted = false;
+        let isResponseDone = false;
+        let isPlayingQueue = false;
+        let audioQueue = [];
+        let nextPlayTime = 0;
+        let registeredBizName = '';
+
+        // =============================================
+        //  PHASE 1 → PHASE 2 TRANSITION
+        // =============================================
+        const regForm = document.getElementById('regForm');
+        const regPhase = document.getElementById('registrationPhase');
+        const voicePhase = document.getElementById('voicePhase');
+
+        regForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            registeredBizName = document.getElementById('bizName').value;
+            const email = document.getElementById('bizEmail').value;
+            console.log(`Registered: ${registeredBizName} (${email})`);
+
+            // Transition to voice phase
+            regPhase.classList.add('phase-exit');
+            setTimeout(() => {
+                regPhase.style.display = 'none';
+                voicePhase.style.display = 'flex';
+                voicePhase.classList.add('phase-enter');
+                startVoiceCall();
+            }, 400);
+        });
+
+        // =============================================
+        //  VOICE CALL SETUP (copied from working voice edit)
+        // =============================================
+        async function startVoiceCall() {
+            const orb = document.getElementById('orb');
+            setStatus('Connecting...', 'idle');
+
+            try {
+                // Get microphone
+                audioStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        sampleRate: 24000
+                    }
+                });
+
+                // Audio context
+                audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+
+                // WebSocket
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}/voice/onboarding/realtime`;
+                console.log('Connecting to:', wsUrl);
+
+                voiceWebSocket = new WebSocket(wsUrl);
+                isVoiceActive = true;
+
+                voiceWebSocket.onopen = async () => {
+                    console.log('WebSocket connected');
+                    setStatus('Connected! Speak anytime...', 'listening');
+
+                    // Start continuous streaming (EXACT copy from working voice)
+                    await startContinuousStreaming();
+                };
+
+                voiceWebSocket.onmessage = async (event) => {
+                    const data = JSON.parse(event.data);
+                    await handleRealtimeEvent(data);
+                };
+
+                voiceWebSocket.onerror = (err) => {
+                    console.error('WebSocket error:', err);
+                    setStatus('Connection error', 'error');
+                };
+
+                voiceWebSocket.onclose = () => {
+                    console.log('WebSocket closed');
+                    isVoiceActive = false;
+                    if (audioStream) {
+                        audioStream.getTracks().forEach(t => t.stop());
+                    }
+                };
+
+            } catch (err) {
+                console.error('Voice call error:', err);
+                if (err.name === 'NotAllowedError') {
+                    setStatus('Microphone access denied', 'error');
+                } else {
+                    setStatus('Failed to start: ' + err.message, 'error');
+                }
+            }
+        }
+
+        // =============================================
+        //  AUDIO STREAMING (EXACT copy from working voice)
+        // =============================================
+        async function startContinuousStreaming() {
+            try {
+                const source = audioContext.createMediaStreamSource(audioStream);
+                const processor = audioContext.createScriptProcessor(4096, 1, 1);
+
+                processor.onaudioprocess = (e) => {
+                    if (!isVoiceActive || !voiceWebSocket || voiceWebSocket.readyState !== WebSocket.OPEN || isMicMuted) {
+                        return;
+                    }
+
+                    const inputData = e.inputBuffer.getChannelData(0);
+
+                    // Convert to 16-bit PCM
+                    const pcm16 = new Int16Array(inputData.length);
+                    for (let i = 0; i < inputData.length; i++) {
+                        const s = Math.max(-1, Math.min(1, inputData[i]));
+                        pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                    }
+
+                    // Base64 encode
+                    const base64Audio = btoa(String.fromCharCode(...new Uint8Array(pcm16.buffer)));
+
+                    voiceWebSocket.send(JSON.stringify({
+                        type: 'input_audio_buffer.append',
+                        audio: base64Audio
+                    }));
+                };
+
+                source.connect(processor);
+                processor.connect(audioContext.destination);
+                console.log('Continuous audio streaming started');
+
+            } catch (error) {
+                console.error('Streaming error:', error);
+            }
+        }
+
+        // =============================================
+        //  AUDIO PLAYBACK (EXACT copy from working voice)
+        // =============================================
+        async function playAudioDelta(base64Audio) {
+            try {
+                const binaryString = atob(base64Audio);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+
+                // PCM16 → Float32
+                const pcm16 = new Int16Array(bytes.buffer);
+                const float32 = new Float32Array(pcm16.length);
+                for (let i = 0; i < pcm16.length; i++) {
+                    float32[i] = pcm16[i] / 32768;
+                }
+
+                // Audio buffer
+                const audioBuffer = audioContext.createBuffer(1, float32.length, 24000);
+                audioBuffer.getChannelData(0).set(float32);
+
+                audioQueue.push(audioBuffer);
+
+                if (!isPlayingQueue) {
+                    playFromQueue();
+                }
+            } catch (error) {
+                console.error('Audio delta error:', error);
+            }
+        }
+
+        function playFromQueue() {
+            if (audioQueue.length === 0) {
+                isPlayingQueue = false;
+                return;
+            }
+
+            isPlayingQueue = true;
+            setStatus('AI speaking...', 'speaking');
+
+            const audioBuffer = audioQueue.shift();
+            const source = audioContext.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(audioContext.destination);
+
+            const currentTime = audioContext.currentTime;
+            const startTime = Math.max(currentTime, nextPlayTime);
+            source.start(startTime);
+            nextPlayTime = startTime + audioBuffer.duration;
+
+            source.onended = () => {
+                if (audioQueue.length > 0) {
+                    playFromQueue();
+                } else {
+                    isPlayingQueue = false;
+                    if (isResponseDone) {
+                        setTimeout(() => {
+                            isMicMuted = false;
+                            console.log('Mic unmuted - playback finished');
+                            setStatus('Your turn – just speak', 'listening');
+                        }, 300);
+                    }
+                }
+            };
+        }
+
+        // =============================================
+        //  EVENT HANDLING (EXACT copy from working voice)
+        // =============================================
+        async function handleRealtimeEvent(event) {
+            console.log('Event:', event.type);
+
+            switch (event.type) {
+                case 'session.created':
+                    const sid = event.sessionid || event.session_id;
+                    console.log('Session:', sid);
+                    document.getElementById('sessionLabel').textContent = `Session: ${sid || 'active'}`;
+                    break;
+
+                case 'input_audio_buffer.speech_started':
+                    setStatus('Hearing you...', 'listening');
+                    break;
+
+                case 'input_audio_buffer.speech_stopped':
+                    setStatus('Thinking...', 'processing');
+                    break;
+
+                case 'conversation.item.input_audio_transcription.completed':
+                    if (event.transcript) {
+                        addMessage('user', event.transcript);
+                    }
+                    break;
+
+                case 'response.audio.delta':
+                    if (!isMicMuted) {
+                        isMicMuted = true;
+                        isResponseDone = false;
+                        console.log('Mic muted – AI speaking');
+                    }
+                    if (event.delta) {
+                        await playAudioDelta(event.delta);
+                    }
+                    break;
+
+                case 'response.audio_transcript.delta':
+                    break;
+
+                case 'response.audio_transcript.done':
+                    if (event.transcript) {
+                        addMessage('ai', event.transcript);
+                    }
+                    break;
+
+                case 'response.done':
+                    isResponseDone = true;
+                    console.log('Server done – waiting for playback');
+                    if (!isPlayingQueue && audioQueue.length === 0) {
+                        setTimeout(() => {
+                            isMicMuted = false;
+                            console.log('Mic unmuted');
+                            setStatus('Your turn – just speak', 'listening');
+                        }, 300);
+                    }
+                    break;
+
+                case 'onboarding.complete':
+                    console.log('Onboarding complete!', event.final_summary);
+                    setStatus('✅ Profile created! Welcome aboard!', 'speaking');
+
+                    // Wait for the farewell audio to finish playing, then redirect
+                    function waitForFarewellAudio() {
+                        if (isPlayingQueue || audioQueue.length > 0) {
+                            // Still playing the farewell – check again in 500ms
+                            setTimeout(waitForFarewellAudio, 500);
+                        } else {
+                            // Farewell finished – show success and redirect
+                            setStatus('✅ Welcome to KratorAI!', 'idle');
+                            setTimeout(() => {
+                                endCall();
+                                window.location.href = '/static/index.html';
+                            }, 2000);
+                        }
+                    }
+                    // Start checking after a small delay (audio chunks still arriving)
+                    setTimeout(waitForFarewellAudio, 1000);
+                    break;
+
+                case 'error':
+                    console.error('Error:', event.error);
+                    setStatus('Error: ' + (event.error || ''), 'error');
+                    break;
+            }
+        }
+
+        // =============================================
+        //  UI HELPERS
+        // =============================================
+        function setStatus(text, state) {
+            const statusEl = document.getElementById('statusText');
+            const orb = document.getElementById('orb');
+
+            statusEl.textContent = text;
+            statusEl.classList.toggle('active', state !== 'idle');
+
+            // Orb state
+            orb.className = 'orb';
+            if (state) orb.classList.add(state);
+        }
+
+        function addMessage(role, text) {
+            const area = document.getElementById('transcriptArea');
+            const div = document.createElement('div');
+            div.className = `msg ${role}`;
+            div.innerHTML = `
+                <div class="msg-label">${role === 'user' ? 'You' : 'AI Consultant'}</div>
+                <div class="msg-text">${text}</div>
+            `;
+            area.appendChild(div);
+            area.scrollTop = area.scrollHeight;
+        }
+
+        function endCall() {
+            isVoiceActive = false;
+
+            if (audioStream) {
+                audioStream.getTracks().forEach(t => t.stop());
+                audioStream = null;
+            }
+
+            if (voiceWebSocket) {
+                voiceWebSocket.close();
+                voiceWebSocket = null;
+            }
+
+            if (audioContext) {
+                audioContext.close().catch(() => { });
+                audioContext = null;
+            }
+
+            audioQueue = [];
+            isPlayingQueue = false;
+            isMicMuted = false;
+        }
+
+        // End call button
+        document.getElementById('endCallBtn').addEventListener('click', () => {
+            endCall();
+            setStatus('Call ended', 'idle');
+            setTimeout(() => {
+                window.location.href = '/static/index.html';
+            }, 1000);
+        });
+    </script>
+</body>
+
+</html>
