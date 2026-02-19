@@ -59,7 +59,9 @@ IMPORTANT CONSTRAINTS:
 - Stay in character as the AI prompt engineer.
 
 FINAL RESPONSE:
-When ready, say: "Here's the prompt I've created: [YOUR DETAILED PROMPT]. Should I proceed with this edit?"
+When ready, you MUST say exactly: "Here's the prompt I've created: [YOUR DETAILED PROMPT]. Should I proceed with this edit?"
+
+Note: The text between "created:" and "Should I" will be extracted as the final prompt.
 
 Be friendly, efficient, and focused on creating the best possible prompt!"""
 
@@ -147,11 +149,24 @@ async def voice_realtime(websocket: WebSocket):
                         transcript = event.get("transcript", "")
                         
                         # If AI is asking for confirmation, prepare final prompt
+                        # If AI is asking for confirmation, prepare final prompt
                         if "should i proceed" in transcript.lower() or "shall i proceed" in transcript.lower():
                             logger.info(f"Detected prompt confirmation: {transcript[:100]}...")
+                            
+                            # Robust extraction: get everything between "created:" and "should i"
+                            final_summary = transcript
+                            import re
+                            match = re.search(r"(?:created[:\s]+)(.*?)(?:\.\s*should|,\s*should|\?\s*$)", transcript, re.IGNORECASE | re.DOTALL)
+                            if match:
+                                final_summary = match.group(1).strip()
+                                logger.info(f"Extracted crafted prompt: {final_summary[:50]}...")
+
+                            # We send it as 'onboarding.complete' so the JS file the user
+                            # already sent to the developer will handle it automatically
+                            # without needing any updates.
                             await websocket.send_json({
-                                "type": "conversation.complete",
-                                "final_prompt": transcript
+                                "type": "onboarding.complete",
+                                "final_summary": final_summary
                             })
                     
             except WebSocketDisconnect:
