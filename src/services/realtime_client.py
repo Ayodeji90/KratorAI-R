@@ -70,7 +70,8 @@ class RealtimeClient:
         session_id: str,
         instructions: str,
         voice: str = "alloy",
-        temperature: float = 0.7
+        temperature: float = 0.7,
+        tools: Optional[list] = None
     ) -> bool:
         """
         Create a new realtime session with WebSocket connection.
@@ -80,6 +81,7 @@ class RealtimeClient:
             instructions: System instructions for the AI
             voice: Voice to use for TTS (alloy, echo, shimmer, etc.)
             temperature: Sampling temperature
+            tools: Optional list of tool definitions
             
         Returns:
             True if session created successfully
@@ -126,6 +128,10 @@ class RealtimeClient:
                     "temperature": temperature
                 }
             }
+            
+            if tools:
+                session_config["session"]["tools"] = tools
+                session_config["session"]["tool_choice"] = "auto"
             
             await ws.send(json.dumps(session_config))
             

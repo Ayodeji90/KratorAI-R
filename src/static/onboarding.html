@@ -4,406 +4,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KratorAI – Business Onboarding</title>
+    <title>KratorAI – Business Onboarding v2</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&display=swap"
+        rel="stylesheet">
     <style>
-        /* ============ RESET & BASE ============ */
-        *,
-        *::before,
-        *::after {
+        :root {
+            --bg-deep: #050706;
+            --bg-panel: #0d1210;
+            --bg-card: #141a17;
+            --accent: #00ffa3;
+            --accent-soft: rgba(0, 255, 163, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a8a4;
+            --text-muted: #5d6662;
+            --border: rgba(255, 255, 255, 0.08);
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
 
-        :root {
-            --bg-primary: #0a0a0f;
-            --bg-secondary: #12121a;
-            --bg-card: #1a1a2e;
-            --accent: #6c63ff;
-            --accent-glow: rgba(108, 99, 255, 0.4);
-            --accent-2: #a78bfa;
-            --text-primary: #f0f0f5;
-            --text-secondary: #8888a0;
-            --text-muted: #555570;
-            --border: rgba(255, 255, 255, 0.06);
-            --success: #22c55e;
-            --error: #ef4444;
-            --radius: 16px;
-        }
-
         body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background: var(--bg-primary);
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-deep);
             color: var(--text-primary);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        /* ============ PHASE 1: REGISTRATION ============ */
-        #registrationPhase {
+            height: 100vh;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 24px;
-            background: radial-gradient(ellipse at 50% 0%, rgba(108, 99, 255, 0.08) 0%, transparent 60%);
-        }
-
-        .reg-container {
-            width: 100%;
-            max-width: 480px;
-            animation: fadeInUp 0.6s ease;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .logo-area {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .logo-area h1 {
-            font-size: 28px;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--accent), var(--accent-2));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 8px;
-        }
-
-        .logo-area p {
-            color: var(--text-secondary);
-            font-size: 15px;
-        }
-
-        .reg-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 36px;
-            backdrop-filter: blur(20px);
-        }
-
-        .reg-card h2 {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 6px;
-        }
-
-        .reg-card .subtitle {
-            color: var(--text-secondary);
-            font-size: 14px;
-            margin-bottom: 28px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 14px 16px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            color: var(--text-primary);
-            font-size: 15px;
-            font-family: inherit;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-glow);
-        }
-
-        .form-group input::placeholder {
-            color: var(--text-muted);
-        }
-
-        .submit-btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, var(--accent), #8b5cf6);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: 600;
-            font-family: inherit;
-            cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.2s;
-            margin-top: 8px;
-        }
-
-        .submit-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 24px var(--accent-glow);
-        }
-
-        .submit-btn:active {
-            transform: translateY(0);
-        }
-
-        /* ============ PHASE 2: VOICE CALL ============ */
-        #voicePhase {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            padding: 32px 24px;
-            background: var(--bg-primary);
-            position: relative;
             overflow: hidden;
         }
 
-        /* Ambient background glow */
-        #voicePhase::before {
+        /* --- Layout --- */
+        .sidebar {
+            width: 320px;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 32px;
+            z-index: 10;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* --- Sidebar UI --- */
+        .logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 60px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ai-assistant {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .orb-status {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, var(--accent), #008f5d);
+            box-shadow: 0 0 40px var(--accent-soft);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .orb-status::after {
             content: '';
             position: absolute;
-            top: -200px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 600px;
-            height: 600px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(108, 99, 255, 0.12) 0%, transparent 70%);
-            pointer-events: none;
-            animation: ambientPulse 4s ease-in-out infinite;
-        }
-
-        @keyframes ambientPulse {
-
-            0%,
-            100% {
-                opacity: 0.6;
-                transform: translateX(-50%) scale(1);
-            }
-
-            50% {
-                opacity: 1;
-                transform: translateX(-50%) scale(1.1);
-            }
-        }
-
-        .voice-header {
-            text-align: center;
-            margin-bottom: 12px;
-            position: relative;
-            z-index: 2;
-        }
-
-        .voice-header h2 {
-            font-size: 18px;
-            font-weight: 500;
-            color: var(--text-secondary);
-        }
-
-        .voice-header .session-label {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
-
-        /* ---- ORB ---- */
-        .orb-container {
-            position: relative;
-            width: 220px;
-            height: 220px;
-            margin: 40px auto 28px;
-            z-index: 2;
-        }
-
-        .orb {
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            background: radial-gradient(circle at 40% 40%, #8b5cf6, var(--accent), #4338ca);
-            box-shadow:
-                0 0 60px var(--accent-glow),
-                0 0 120px rgba(108, 99, 255, 0.15),
-                inset 0 0 40px rgba(255, 255, 255, 0.05);
-            animation: orbIdle 3s ease-in-out infinite;
-            transition: box-shadow 0.4s, transform 0.4s;
+            border: 2px solid var(--accent);
+            animation: pulse 2s infinite;
         }
 
-        /* Orb States */
-        @keyframes orbIdle {
-
-            0%,
-            100% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.03);
-            }
-        }
-
-        @keyframes orbListening {
-
-            0%,
-            100% {
-                transform: scale(1);
-                box-shadow: 0 0 60px var(--accent-glow), 0 0 120px rgba(108, 99, 255, 0.15);
-            }
-
-            50% {
-                transform: scale(1.06);
-                box-shadow: 0 0 80px var(--accent-glow), 0 0 160px rgba(108, 99, 255, 0.25);
-            }
-        }
-
-        @keyframes orbSpeaking {
+        @keyframes pulse {
             0% {
                 transform: scale(1);
-            }
-
-            25% {
-                transform: scale(1.08);
-            }
-
-            50% {
-                transform: scale(0.97);
-            }
-
-            75% {
-                transform: scale(1.05);
-            }
-
-            100% {
-                transform: scale(1);
-            }
-        }
-
-        .orb.listening {
-            animation: orbListening 1.5s ease-in-out infinite;
-            box-shadow:
-                0 0 80px rgba(34, 197, 94, 0.3),
-                0 0 140px rgba(34, 197, 94, 0.12),
-                inset 0 0 40px rgba(255, 255, 255, 0.05);
-            background: radial-gradient(circle at 40% 40%, #22c55e, #16a34a, #15803d);
-        }
-
-        .orb.speaking {
-            animation: orbSpeaking 0.8s ease-in-out infinite;
-            box-shadow:
-                0 0 100px var(--accent-glow),
-                0 0 180px rgba(108, 99, 255, 0.2),
-                inset 0 0 60px rgba(255, 255, 255, 0.08);
-        }
-
-        .orb.processing {
-            animation: orbSpeaking 1.2s ease-in-out infinite;
-            background: radial-gradient(circle at 40% 40%, #f59e0b, #d97706, #b45309);
-            box-shadow:
-                0 0 80px rgba(245, 158, 11, 0.3),
-                0 0 140px rgba(245, 158, 11, 0.12),
-                inset 0 0 40px rgba(255, 255, 255, 0.05);
-        }
-
-        .orb.error {
-            background: radial-gradient(circle at 40% 40%, #ef4444, #dc2626, #b91c1c);
-            box-shadow:
-                0 0 60px rgba(239, 68, 68, 0.3),
-                0 0 120px rgba(239, 68, 68, 0.12);
-            animation: orbIdle 2s ease-in-out infinite;
-        }
-
-        /* Ring around orb */
-        .orb-ring {
-            position: absolute;
-            top: -12px;
-            left: -12px;
-            right: -12px;
-            bottom: -12px;
-            border-radius: 50%;
-            border: 1.5px solid rgba(108, 99, 255, 0.15);
-            animation: ringPulse 3s ease-in-out infinite;
-        }
-
-        .orb-ring:nth-child(2) {
-            top: -24px;
-            left: -24px;
-            right: -24px;
-            bottom: -24px;
-            border-color: rgba(108, 99, 255, 0.08);
-            animation-delay: 0.5s;
-        }
-
-        @keyframes ringPulse {
-
-            0%,
-            100% {
                 opacity: 0.5;
-                transform: scale(1);
             }
 
-            50% {
-                opacity: 1;
-                transform: scale(1.02);
+            100% {
+                transform: scale(1.4);
+                opacity: 0;
             }
         }
 
-        /* Status text below orb */
-        .status-text {
-            text-align: center;
-            font-size: 16px;
-            font-weight: 500;
+        .assistant-msg {
+            font-size: 15px;
+            line-height: 1.6;
             color: var(--text-secondary);
-            margin-bottom: 32px;
-            z-index: 2;
-            min-height: 24px;
-            transition: color 0.3s;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 16px;
+            border-radius: 16px;
+            margin-top: 20px;
+            border-left: 3px solid var(--accent);
         }
 
-        .status-text.active {
-            color: var(--text-primary);
+        /* --- Stepper Header --- */
+        .header {
+            padding: 32px 48px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
-        /* ---- TRANSCRIPT ---- */
-        .transcript-area {
-            width: 100%;
-            max-width: 560px;
+        .stepper {
+            display: flex;
+            gap: 40px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0.3;
+            transition: var(--transition);
+        }
+
+        .step.active {
+            opacity: 1;
+        }
+
+        .step.completed {
+            opacity: 0.6;
+        }
+
+        .step-num {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            border: 1px solid var(--border);
+        }
+
+        .step.active .step-num {
+            background: var(--accent);
+            color: var(--bg-deep);
+            border-color: var(--accent);
+        }
+
+        .step-label {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* --- Page Container --- */
+        .onboarding-pages {
             flex: 1;
-            overflow-y: auto;
-            padding: 0 8px 100px;
-            z-index: 2;
-            -ms-overflow-style: none;
-            scrollbar-width: thin;
-            scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+            padding: 0 48px;
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+            position: relative;
         }
 
-        .msg {
-            margin-bottom: 16px;
-            animation: msgIn 0.3s ease;
+        .page {
+            display: none;
+            flex-direction: column;
+            gap: 32px;
+            animation: fadeIn 0.4s ease;
         }
 
-        @keyframes msgIn {
+        .page.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(8px);
+                transform: translateY(10px);
             }
 
             to {
@@ -412,526 +211,516 @@
             }
         }
 
-        .msg-label {
-            font-size: 11px;
+        .page-title h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .page-title p {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        /* --- Form Elements --- */
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .input-container {
+            position: relative;
+        }
+
+        input {
+            width: 100%;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 16px;
+            border-radius: var(--radius-md);
+            color: white;
+            font-size: 16px;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        input:focus,
+        input.highlighted {
+            border-color: var(--accent);
+            box-shadow: 0 0 15px var(--accent-soft);
+        }
+
+        /* --- Team Size Row --- */
+        .team-size-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .team-btn {
+            flex: 1;
+            padding: 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .team-btn.selected {
+            border-color: var(--accent);
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        /* --- Footer Nav --- */
+        .footer-nav {
+            padding: 40px 48px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-back {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn-continue {
+            padding: 16px 40px;
+            background: var(--accent);
+            color: var(--bg-deep);
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: var(--transition);
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .btn-continue.active {
+            opacity: 1;
+            pointer-events: auto;
+            box-shadow: 0 4px 20px var(--accent-soft);
+        }
+
+        /* --- Tag Cloud --- */
+        .tag-cloud {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .tag {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .tag.active {
+            background: var(--accent-soft);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* --- Aesthetic Options --- */
+        .aesthetic-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .aesthetic-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .aesthetic-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            opacity: 0.6;
+        }
+
+        .aesthetic-info {
+            padding: 20px;
+        }
+
+        .aesthetic-info h3 {
+            font-size: 18px;
             margin-bottom: 4px;
         }
 
-        .msg.user .msg-label {
-            color: var(--success);
+        .aesthetic-info p {
+            font-size: 12px;
+            color: var(--text-muted);
         }
 
-        .msg.ai .msg-label {
-            color: var(--accent-2);
+        .aesthetic-card:hover,
+        .aesthetic-card.selected {
+            border-color: var(--accent);
         }
 
-        .msg-text {
-            font-size: 15px;
-            line-height: 1.55;
-            color: var(--text-primary);
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 12px 16px;
+        .aesthetic-card.selected img {
+            opacity: 1;
         }
 
-        .msg.ai .msg-text {
-            background: rgba(108, 99, 255, 0.06);
-            border-color: rgba(108, 99, 255, 0.12);
-        }
-
-        /* ---- END CALL BUTTON ---- */
-        .end-call-bar {
+        /* --- Registration Phase --- */
+        #registrationPhase {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: center;
-            padding: 20px;
-            background: linear-gradient(transparent, var(--bg-primary) 40%);
-            z-index: 10;
-        }
-
-        .end-call-btn {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            background: var(--error);
-            border: none;
-            cursor: pointer;
+            inset: 0;
+            background: var(--bg-deep);
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: transform 0.15s, box-shadow 0.2s;
-            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+            z-index: 100;
         }
 
-        .end-call-btn:hover {
-            transform: scale(1.08);
-            box-shadow: 0 6px 30px rgba(239, 68, 68, 0.45);
+        .reg-card {
+            background: var(--bg-panel);
+            padding: 48px;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            width: 440px;
+            text-align: center;
         }
 
-        .end-call-btn svg {
-            width: 28px;
-            height: 28px;
-            fill: white;
+        .reg-card h2 {
+            font-size: 24px;
+            margin-bottom: 12px;
         }
 
-        /* ============ TRANSITIONS ============ */
-        .phase-exit {
-            animation: phaseOut 0.4s ease forwards;
-        }
-
-        @keyframes phaseOut {
-            to {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-        }
-
-        .phase-enter {
-            animation: phaseIn 0.5s ease;
-        }
-
-        @keyframes phaseIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
-        }
-
-        /* ============ RESPONSIVE ============ */
-        @media (max-width: 520px) {
-            .reg-card {
-                padding: 24px;
-            }
-
-            .orb-container {
-                width: 160px;
-                height: 160px;
-            }
+        .reg-card p {
+            color: var(--text-secondary);
+            margin-bottom: 32px;
         }
     </style>
 </head>
 
 <body>
 
-    <!-- =============== PHASE 1: REGISTRATION =============== -->
-    <section id="registrationPhase">
-        <div class="reg-container">
-            <div class="logo-area">
-                <h1>KratorAI</h1>
-                <p>Register your business to get started</p>
-            </div>
+    <div class="sidebar">
+        <div class="logo">KratorAI</div>
 
-            <div class="reg-card">
-                <h2>Business Registration</h2>
-                <p class="subtitle">We'll set up your profile through a quick AI voice interview</p>
-
-                <form id="regForm">
-                    <div class="form-group">
-                        <label for="bizName">Business Name</label>
-                        <input type="text" id="bizName" placeholder="e.g. Ade's Kitchen" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="bizEmail">Email Address</label>
-                        <input type="email" id="bizEmail" placeholder="you@example.com" required>
-                    </div>
-                    <button type="submit" class="submit-btn">Register & Start Voice Interview →</button>
-                </form>
+        <div class="ai-assistant">
+            <div class="orb-status" id="orb"></div>
+            <div id="statusText" style="font-size: 14px; color: var(--text-muted);">Initializing...</div>
+            <div class="assistant-msg" id="aiBubble">
+                Welcome! Let's get your business profile set up. Start by telling me your company name.
             </div>
         </div>
-    </section>
 
-    <!-- =============== PHASE 2: VOICE CALL =============== -->
-    <section id="voicePhase">
-        <div class="voice-header">
-            <h2>AI Business Consultant</h2>
-            <div class="session-label" id="sessionLabel">Connecting...</div>
+        <div id="transcript"
+            style="margin-top: 40px; font-size: 12px; color: var(--text-muted); height: 150px; overflow-y: auto;">
+            <!-- Live Transcript -->
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="stepper">
+                <div class="step active" id="step1">
+                    <div class="step-num">1</div>
+                    <div class="step-label">Initial Setup</div>
+                </div>
+                <div class="step" id="step2">
+                    <div class="step-num">2</div>
+                    <div class="step-label">Brand Identity</div>
+                </div>
+                <div class="step" id="step3">
+                    <div class="step-num">3</div>
+                    <div class="step-label">Targeting</div>
+                </div>
+                <div class="step" id="step4">
+                    <div class="step-num">4</div>
+                    <div class="step-label">Review</div>
+                </div>
+            </div>
+
+            <button class="btn-back" style="font-size: 13px;">Save Draft</button>
         </div>
 
-        <div class="orb-container">
-            <div class="orb-ring"></div>
-            <div class="orb-ring"></div>
-            <div class="orb" id="orb"></div>
+        <div class="onboarding-pages">
+            <!-- PAGE 1: SETUP -->
+            <div class="page active" id="page1">
+                <div class="page-title">
+                    <h1>Initial Setup</h1>
+                    <p>Tell us about your company to build your workspace foundation.</p>
+                </div>
+
+                <div class="field-group">
+                    <label class="label">Company Name</label>
+                    <input type="text" id="company_name" placeholder="e.g., Apex Dynamics">
+                </div>
+
+                <div class="field-group">
+                    <label class="label">Industry</label>
+                    <input type="text" id="industry" placeholder="e.g., Technology & SaaS">
+                </div>
+
+                <div class="field-group">
+                    <label class="label">Team Size</label>
+                    <div class="team-size-row" id="team_size_group">
+                        <button class="team-btn" data-value="1-10">1-10</button>
+                        <button class="team-btn" data-value="11-50">11-50</button>
+                        <button class="team-btn" data-value="51-200">51-200</button>
+                        <button class="team-btn" data-value="200+">200+</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE 2: BRAND -->
+            <div class="page" id="page2">
+                <div class="page-title">
+                    <h1>Brand Identity</h1>
+                    <p>Define how the world sees and hears your brand.</p>
+                </div>
+
+                <div class="field-group">
+                    <label class="label">Brand Name</label>
+                    <input type="text" id="brand_name" placeholder="Usually matches company name">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                    <div class="field-group">
+                        <label class="label">Voice Tone</label>
+                        <input type="text" id="voice_tone" placeholder="e.g., Professional">
+                    </div>
+                    <div class="field-group">
+                        <label class="label">Logo Status</label>
+                        <input type="text" id="logo_status" placeholder="e.g., has_logo">
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label class="label">Palette Preferences</label>
+                    <input type="text" id="palette_preference" placeholder="e.g., Emerald and Orange">
+                </div>
+            </div>
+
+            <!-- PAGE 3: TARGETING -->
+            <div class="page" id="page3">
+                <div class="page-title">
+                    <h1>Data Integration</h1>
+                    <p>Who is your ideal audience and what is your focus?</p>
+                </div>
+
+                <div class="field-group">
+                    <label class="label">Target Audience Tags</label>
+                    <div class="tag-cloud" id="target_audience_tags">
+                        <!-- Dynamic Tags -->
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label class="label">Marketing Objective</label>
+                    <input type="text" id="marketing_objective" placeholder="e.g., Brand Awareness">
+                </div>
+
+                <div class="field-group">
+                    <label class="label">Customer Description</label>
+                    <input type="text" id="ideal_customer_description" placeholder="A brief persona description...">
+                </div>
+            </div>
+
+            <!-- PAGE 4: AESTHETIC -->
+            <div class="page" id="page4">
+                <div class="page-title">
+                    <h1>Aesthetic Direction</h1>
+                    <p>Choose the visual style that resonates with your brand.</p>
+                </div>
+
+                <div class="aesthetic-grid" id="aesthetic_options">
+                    <div class="aesthetic-card" data-value="Modern">
+                        <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=400" alt="Modern">
+                        <div class="aesthetic-info">
+                            <h3>Modern</h3>
+                            <p>Sleek, minimal, and bold geometric structures.</p>
+                        </div>
+                    </div>
+                    <div class="aesthetic-card" data-value="Classic">
+                        <img src="https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=400"
+                            alt="Classic">
+                        <div class="aesthetic-info">
+                            <h3>Classic</h3>
+                            <p>Timeless elegance, serif typography, and traditional layouts.</p>
+                        </div>
+                    </div>
+                    <div class="aesthetic-card" data-value="Playful">
+                        <img src="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=400" alt="Playful">
+                        <div class="aesthetic-info">
+                            <h3>Playful</h3>
+                            <p>Vibrant colors, organic shapes, and a friendly atmosphere.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="status-text" id="statusText">Initializing...</div>
-
-        <div class="transcript-area" id="transcriptArea"></div>
-
-        <div class="end-call-bar">
-            <button class="end-call-btn" id="endCallBtn" title="End Call">
-                <svg viewBox="0 0 24 24">
-                    <path
-                        d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08a.956.956 0 010-1.36C3.15 9.15 7.32 7.5 12 7.5s8.85 1.65 11.71 4.22c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.1-.7-.28a11.27 11.27 0 00-2.67-1.85.996.996 0 01-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z" />
-                </svg>
-            </button>
+        <div class="footer-nav">
+            <button class="btn-back" id="prevBtn">← Back</button>
+            <button class="btn-continue" id="nextBtn">Continue to Brand Identity →</button>
         </div>
-    </section>
+    </div>
 
+    <script src="krator_voice_engine.js"></script>
     <script>
-        // =============================================
-        //  STATE
-        // =============================================
-        let voiceWebSocket = null;
-        let audioStream = null;
-        let audioContext = null;
-        let isVoiceActive = false;
-        let isMicMuted = false;
-        let isResponseDone = false;
-        let isPlayingQueue = false;
-        let audioQueue = [];
-        let nextPlayTime = 0;
-        let registeredBizName = '';
-
-        // =============================================
-        //  PHASE 1 → PHASE 2 TRANSITION
-        // =============================================
-        const regForm = document.getElementById('regForm');
-        const regPhase = document.getElementById('registrationPhase');
-        const voicePhase = document.getElementById('voicePhase');
-
-        regForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            registeredBizName = document.getElementById('bizName').value;
-            const email = document.getElementById('bizEmail').value;
-            console.log(`Registered: ${registeredBizName} (${email})`);
-
-            // Transition to voice phase
-            regPhase.classList.add('phase-exit');
-            setTimeout(() => {
-                regPhase.style.display = 'none';
-                voicePhase.style.display = 'flex';
-                voicePhase.classList.add('phase-enter');
-                startVoiceCall();
-            }, 400);
+        // --- APP STATE ---
+        let currentPage = 1;
+        const totalPages = 4;
+        const profile = {};
+        const engine = new KratorVoiceEngine({
+            wsUrl: `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/voice/onboarding/realtime`,
+            onStatusChange: (text, state) => {
+                const statusEl = document.getElementById('statusText');
+                statusEl.textContent = text;
+                statusEl.style.color = state === 'speaking' ? 'var(--accent)' : 'var(--text-muted)';
+            },
+            onMessage: (role, text) => {
+                if (role === 'ai') {
+                    document.getElementById('aiBubble').textContent = text;
+                }
+                const trans = document.getElementById('transcript');
+                const p = document.createElement('p');
+                p.innerHTML = `<strong>${role.toUpperCase()}:</strong> ${text}`;
+                trans.prepend(p);
+            },
+            onUpdate: (event) => {
+                console.log('Real-time Update:', event);
+                handleOnboardingUpdate(event);
+            },
+            onComplete: (summary) => {
+                alert("Onboarding Complete! Welcome aboard.");
+                window.location.href = "/static/index.html";
+            }
         });
 
-        // =============================================
-        //  VOICE CALL SETUP (copied from working voice edit)
-        // =============================================
-        async function startVoiceCall() {
-            const orb = document.getElementById('orb');
-            setStatus('Connecting...', 'idle');
-
-            try {
-                // Get microphone
-                audioStream = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        sampleRate: 24000
-                    }
-                });
-
-                // Audio context
-                audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
-
-                // WebSocket
-                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                const wsUrl = `${protocol}//${window.location.host}/voice/onboarding/realtime`;
-                console.log('Connecting to:', wsUrl);
-
-                voiceWebSocket = new WebSocket(wsUrl);
-                isVoiceActive = true;
-
-                voiceWebSocket.onopen = async () => {
-                    console.log('WebSocket connected');
-                    setStatus('Connected! Speak anytime...', 'listening');
-
-                    // Start continuous streaming (EXACT copy from working voice)
-                    await startContinuousStreaming();
-                };
-
-                voiceWebSocket.onmessage = async (event) => {
-                    const data = JSON.parse(event.data);
-                    await handleRealtimeEvent(data);
-                };
-
-                voiceWebSocket.onerror = (err) => {
-                    console.error('WebSocket error:', err);
-                    setStatus('Connection error', 'error');
-                };
-
-                voiceWebSocket.onclose = () => {
-                    console.log('WebSocket closed');
-                    isVoiceActive = false;
-                    if (audioStream) {
-                        audioStream.getTracks().forEach(t => t.stop());
-                    }
-                };
-
-            } catch (err) {
-                console.error('Voice call error:', err);
-                if (err.name === 'NotAllowedError') {
-                    setStatus('Microphone access denied', 'error');
-                } else {
-                    setStatus('Failed to start: ' + err.message, 'error');
-                }
-            }
-        }
-
-        // =============================================
-        //  AUDIO STREAMING (EXACT copy from working voice)
-        // =============================================
-        async function startContinuousStreaming() {
-            try {
-                const source = audioContext.createMediaStreamSource(audioStream);
-                const processor = audioContext.createScriptProcessor(4096, 1, 1);
-
-                processor.onaudioprocess = (e) => {
-                    if (!isVoiceActive || !voiceWebSocket || voiceWebSocket.readyState !== WebSocket.OPEN || isMicMuted) {
-                        return;
-                    }
-
-                    const inputData = e.inputBuffer.getChannelData(0);
-
-                    // Convert to 16-bit PCM
-                    const pcm16 = new Int16Array(inputData.length);
-                    for (let i = 0; i < inputData.length; i++) {
-                        const s = Math.max(-1, Math.min(1, inputData[i]));
-                        pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-                    }
-
-                    // Base64 encode
-                    const base64Audio = btoa(String.fromCharCode(...new Uint8Array(pcm16.buffer)));
-
-                    voiceWebSocket.send(JSON.stringify({
-                        type: 'input_audio_buffer.append',
-                        audio: base64Audio
-                    }));
-                };
-
-                source.connect(processor);
-                processor.connect(audioContext.destination);
-                console.log('Continuous audio streaming started');
-
-            } catch (error) {
-                console.error('Streaming error:', error);
-            }
-        }
-
-        // =============================================
-        //  AUDIO PLAYBACK (EXACT copy from working voice)
-        // =============================================
-        async function playAudioDelta(base64Audio) {
-            try {
-                const binaryString = atob(base64Audio);
-                const bytes = new Uint8Array(binaryString.length);
-                for (let i = 0; i < binaryString.length; i++) {
-                    bytes[i] = binaryString.charCodeAt(i);
-                }
-
-                // PCM16 → Float32
-                const pcm16 = new Int16Array(bytes.buffer);
-                const float32 = new Float32Array(pcm16.length);
-                for (let i = 0; i < pcm16.length; i++) {
-                    float32[i] = pcm16[i] / 32768;
-                }
-
-                // Audio buffer
-                const audioBuffer = audioContext.createBuffer(1, float32.length, 24000);
-                audioBuffer.getChannelData(0).set(float32);
-
-                audioQueue.push(audioBuffer);
-
-                if (!isPlayingQueue) {
-                    playFromQueue();
-                }
-            } catch (error) {
-                console.error('Audio delta error:', error);
-            }
-        }
-
-        function playFromQueue() {
-            if (audioQueue.length === 0) {
-                isPlayingQueue = false;
-                return;
-            }
-
-            isPlayingQueue = true;
-            setStatus('AI speaking...', 'speaking');
-
-            const audioBuffer = audioQueue.shift();
-            const source = audioContext.createBufferSource();
-            source.buffer = audioBuffer;
-            source.connect(audioContext.destination);
-
-            const currentTime = audioContext.currentTime;
-            const startTime = Math.max(currentTime, nextPlayTime);
-            source.start(startTime);
-            nextPlayTime = startTime + audioBuffer.duration;
-
-            source.onended = () => {
-                if (audioQueue.length > 0) {
-                    playFromQueue();
-                } else {
-                    isPlayingQueue = false;
-                    if (isResponseDone) {
-                        setTimeout(() => {
-                            isMicMuted = false;
-                            console.log('Mic unmuted - playback finished');
-                            setStatus('Your turn – just speak', 'listening');
-                        }, 300);
-                    }
-                }
-            };
-        }
-
-        // =============================================
-        //  EVENT HANDLING (EXACT copy from working voice)
-        // =============================================
-        async function handleRealtimeEvent(event) {
-            console.log('Event:', event.type);
-
-            switch (event.type) {
-                case 'session.created':
-                    const sid = event.sessionid || event.session_id;
-                    console.log('Session:', sid);
-                    document.getElementById('sessionLabel').textContent = `Session: ${sid || 'active'}`;
-                    break;
-
-                case 'input_audio_buffer.speech_started':
-                    setStatus('Hearing you...', 'listening');
-                    break;
-
-                case 'input_audio_buffer.speech_stopped':
-                    setStatus('Thinking...', 'processing');
-                    break;
-
-                case 'conversation.item.input_audio_transcription.completed':
-                    if (event.transcript) {
-                        addMessage('user', event.transcript);
-                    }
-                    break;
-
-                case 'response.audio.delta':
-                    if (!isMicMuted) {
-                        isMicMuted = true;
-                        isResponseDone = false;
-                        console.log('Mic muted – AI speaking');
-                    }
-                    if (event.delta) {
-                        await playAudioDelta(event.delta);
-                    }
-                    break;
-
-                case 'response.audio_transcript.delta':
-                    break;
-
-                case 'response.audio_transcript.done':
-                    if (event.transcript) {
-                        addMessage('ai', event.transcript);
-                    }
-                    break;
-
-                case 'response.done':
-                    isResponseDone = true;
-                    console.log('Server done – waiting for playback');
-                    if (!isPlayingQueue && audioQueue.length === 0) {
-                        setTimeout(() => {
-                            isMicMuted = false;
-                            console.log('Mic unmuted');
-                            setStatus('Your turn – just speak', 'listening');
-                        }, 300);
-                    }
-                    break;
-
-                case 'onboarding.complete':
-                    console.log('Onboarding complete!', event.final_summary);
-                    setStatus('✅ Profile created! Welcome aboard!', 'speaking');
-
-                    // Wait for the farewell audio to finish playing, then redirect
-                    function waitForFarewellAudio() {
-                        if (isPlayingQueue || audioQueue.length > 0) {
-                            // Still playing the farewell – check again in 500ms
-                            setTimeout(waitForFarewellAudio, 500);
+        // --- UI HANDLERS ---
+        function handleOnboardingUpdate(data) {
+            // 1. Fill Fields
+            if (data.prefill_fields) {
+                for (const [key, value] of Object.entries(data.prefill_fields)) {
+                    profile[key] = value;
+                    const el = document.getElementById(key);
+                    if (el) {
+                        if (key === 'target_audience_tags') {
+                            updateTags(value);
                         } else {
-                            // Farewell finished – show success and redirect
-                            setStatus('✅ Welcome to KratorAI!', 'idle');
-                            setTimeout(() => {
-                                endCall();
-                                window.location.href = '/static/index.html';
-                            }, 2000);
+                            el.value = value;
                         }
                     }
-                    // Start checking after a small delay (audio chunks still arriving)
-                    setTimeout(waitForFarewellAudio, 1000);
-                    break;
 
-                case 'error':
-                    console.error('Error:', event.error);
-                    setStatus('Error: ' + (event.error || ''), 'error');
-                    break;
+                    // Specific Handling for enums
+                    if (key === 'team_size') updateTeamSize(value);
+                    if (key === 'aesthetic_style') updateAesthetic(value);
+                }
+            }
+
+            // 2. Highlighting
+            document.querySelectorAll('input').forEach(i => i.classList.remove('highlighted'));
+            if (data.highlight_fields) {
+                data.highlight_fields.forEach(f => {
+                    const el = document.getElementById(f);
+                    if (el) el.classList.add('highlighted');
+                });
+            }
+
+            // 3. Page Completion
+            const nextBtn = document.getElementById('nextBtn');
+            if (data.page_completed) {
+                nextBtn.classList.add('active');
+            } else {
+                nextBtn.classList.remove('active');
             }
         }
 
-        // =============================================
-        //  UI HELPERS
-        // =============================================
-        function setStatus(text, state) {
-            const statusEl = document.getElementById('statusText');
-            const orb = document.getElementById('orb');
-
-            statusEl.textContent = text;
-            statusEl.classList.toggle('active', state !== 'idle');
-
-            // Orb state
-            orb.className = 'orb';
-            if (state) orb.classList.add(state);
+        function updateTags(tagsJson) {
+            const container = document.getElementById('target_audience_tags');
+            container.innerHTML = '';
+            try {
+                const tags = typeof tagsJson === 'string' ? JSON.parse(tagsJson) : tagsJson;
+                tags.forEach(t => {
+                    const span = document.createElement('span');
+                    span.className = 'tag active';
+                    span.textContent = t;
+                    container.appendChild(span);
+                });
+            } catch (e) { console.error("Tag parse error", e); }
         }
 
-        function addMessage(role, text) {
-            const area = document.getElementById('transcriptArea');
-            const div = document.createElement('div');
-            div.className = `msg ${role}`;
-            div.innerHTML = `
-                <div class="msg-label">${role === 'user' ? 'You' : 'AI Consultant'}</div>
-                <div class="msg-text">${text}</div>
-            `;
-            area.appendChild(div);
-            area.scrollTop = area.scrollHeight;
+        function updateTeamSize(val) {
+            document.querySelectorAll('.team-btn').forEach(b => {
+                b.classList.toggle('selected', b.dataset.value === val);
+            });
         }
 
-        function endCall() {
-            isVoiceActive = false;
-
-            if (audioStream) {
-                audioStream.getTracks().forEach(t => t.stop());
-                audioStream = null;
-            }
-
-            if (voiceWebSocket) {
-                voiceWebSocket.close();
-                voiceWebSocket = null;
-            }
-
-            if (audioContext) {
-                audioContext.close().catch(() => { });
-                audioContext = null;
-            }
-
-            audioQueue = [];
-            isPlayingQueue = false;
-            isMicMuted = false;
+        function updateAesthetic(val) {
+            document.querySelectorAll('.aesthetic-card').forEach(c => {
+                c.classList.toggle('selected', c.dataset.value === val);
+            });
         }
 
-        // End call button
-        document.getElementById('endCallBtn').addEventListener('click', () => {
-            endCall();
-            setStatus('Call ended', 'idle');
-            setTimeout(() => {
-                window.location.href = '/static/index.html';
-            }, 1000);
-        });
+        // --- NAVIGATION ---
+        window.onload = () => {
+            engine.start();
+        };
+
+        document.getElementById('nextBtn').onclick = () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                updatePageUI();
+            }
+        };
+
+        document.getElementById('prevBtn').onclick = () => {
+            if (currentPage > 1) {
+                currentPage--;
+                updatePageUI();
+            }
+        };
+
+        function updatePageUI() {
+            document.querySelectorAll('.page').forEach((p, idx) => {
+                p.classList.toggle('active', idx + 1 === currentPage);
+            });
+            document.querySelectorAll('.step').forEach((s, idx) => {
+                s.classList.toggle('active', idx + 1 === currentPage);
+                s.classList.toggle('completed', idx + 1 < currentPage);
+            });
+
+            const nextBtn = document.getElementById('nextBtn');
+            if (currentPage === 4) {
+                nextBtn.textContent = "Launch Workspace 🚀";
+                // Page 4 is always completable if user stays there
+            } else {
+                const labels = ["", "Brand Identity", "Targeting", "Review"];
+                nextBtn.textContent = `Continue to ${labels[currentPage]} →`;
+            }
+            // Check if page already marked as completed by AI
+            // (In a real app, we'd check internal state)
+        }
     </script>
 </body>
 

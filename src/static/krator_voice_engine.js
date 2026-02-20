@@ -10,6 +10,7 @@ class KratorVoiceEngine {
         this.onStatusChange = options.onStatusChange || (() => { });
         this.onMessage = options.onMessage || (() => { });
         this.onComplete = options.onComplete || (() => { });
+        this.onUpdate = options.onUpdate || (() => { }); // Added for Spec v2 real-time state
 
         this.ws = null;
         this.audioStream = null;
@@ -192,6 +193,10 @@ class KratorVoiceEngine {
 
             case 'onboarding.complete':
                 this.onComplete(event.final_summary);
+                break;
+
+            case 'onboarding.update':
+                this.onUpdate(event);
                 break;
 
             case 'error':

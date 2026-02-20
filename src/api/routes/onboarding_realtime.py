@@ -14,51 +14,69 @@ import logging
 
 from src.services.realtime_client import get_realtime_client
 from src.utils.logging import get_logger
+from src.prompts.voice_prompts import ONBOARDING_REALTIME_INSTRUCTIONS
 
 logger = get_logger(__name__)
 
 router = APIRouter()
 
-# Realtime instructions for business onboarding - BUSINESS PROFILE COLLECTION
-ONBOARDING_REALTIME_INSTRUCTIONS = """You are a professional Business Consultant for KratorAI, helping business owners create their profile through natural voice conversation.
 
-YOUR GOAL: Collect essential business information to build a complete Business Profile.
+# TOOL DEFINITIONS - ONBOARDING SPEC V2
+PROFILE_UPDATE_TOOL = {
+    "type": "function",
+    "name": "update_profile",
+    "description": "Updates a specific field in the user's business profile.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "field_name": {
+                "type": "string",
+                "enum": [
+                    "company_name", "industry", "team_size", 
+                    "brand_name", "voice_tone", "logo_status", "palette_preference",
+                    "target_audience_tags", "marketing_objective", "ideal_customer_description",
+                    "aesthetic_style"
+                ]
+            },
+            "value": {
+                "type": "string",
+                "description": "The value to set (can be a string description for tags)"
+            }
+        },
+        "required": ["field_name", "value"]
+    }
+}
 
-CONVERSATION FLOW:
-1. Greet warmly: "Hi there! Welcome to KratorAI. I'm your AI Business Consultant. Let's get your business profile set up — it'll only take a minute. What's the name of your business?"
-2. Ask ONE question at a time to gather missing information
-3. Be conversational — if they give a short answer, ask a quick follow-up
-4. Once you have all core information, summarize and ask for confirmation
-5. When confirmed, give a PROPER FAREWELL (see below)
-
-BE CONCISE - Keep questions short and clear for spoken conversation.
-
-INFORMATION TO COLLECT:
-1. Business Name
-2. Industry/Niche (Fashion, Food, Tech, etc.)
-3. Description (what the business does)
-4. Target Audience (ideal customers)
-5. Brand Voice (Professional, Playful, Luxury, etc.)
-6. Key Offerings (main products or services)
-
-SUMMARY FORMAT:
-When you have all information, say:
-"Great! Let me confirm your profile: [Business Name] is a [Industry] business that [Description]. Your target audience is [Target Audience], your brand voice is [Brand Voice], and you offer [Key Offerings]. Does that sound right?"
-
-IMPORTANT CONSTRAINTS:
-- DO NOT generate user turns or simulate user speech.
-- ONLY respond as the AI assistant.
-- NEVER include "User:" or "AI:" prefixes in your spoken response.
-- If you hear silence or noise that isn't speech, do not respond.
-- Stay in character as the Business Consultant.
-
-COMPLETION — FAREWELL:
-When the user confirms their profile is correct, you MUST give a warm, enthusiastic farewell. Say something like:
-"Wonderful! Your business profile has been saved and you're all set. Welcome aboard KratorAI! You can now start creating stunning designs for your business. I can't wait to see what you create. Have a great day!"
-
-The farewell MUST include the phrase "welcome aboard KratorAI" — this is the signal that onboarding is complete.
-
-Be friendly, professional, and focused on building their complete profile!"""
+ONBOARDING_STATUS_TOOL = {
+    "type": "function",
+    "name": "update_onboarding_status",
+    "description": "Updates the UI state, navigation, and missing fields for the current onboarding page.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "page_completed": {
+                "type": "boolean",
+                "description": "Whether all required fields for the current page are filled"
+            },
+            "highlight_fields": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Which input field to focus/highlight next"
+            },
+            "missing_required_fields": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "List of required fields still missing on this page"
+            },
+            "suggested_options": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Options to suggest for the current field (e.g. industry names or tags)"
+            }
+        },
+        "required": ["page_completed", "missing_required_fields"]
+    }
+}
 
 
 @router.websocket("/onboarding/realtime")
@@ -83,12 +101,13 @@ async def onboarding_realtime(websocket: WebSocket):
         return
     
     try:
-        # Create realtime session
+        # Create realtime session with tools
         success = await realtime_client.create_session(
             session_id=session_id,
             instructions=ONBOARDING_REALTIME_INSTRUCTIONS,
             voice="alloy",
-            temperature=0.7
+            temperature=0.7,
+            tools=[PROFILE_UPDATE_TOOL, ONBOARDING_STATUS_TOOL]
         )
         
         if not success:
@@ -105,6 +124,15 @@ async def onboarding_realtime(websocket: WebSocket):
             "sessionid": session_id
         })
         
+        # Internal state to batch updates if needed
+        current_onboarding_update = {
+            "prefill_fields": {},
+            "highlight_fields": [],
+            "suggested_options": [],
+            "page_completed": False,
+            "missing_required_fields": []
+        }
+        
         # Create tasks for bidirectional streaming
         async def client_to_server():
             """Forward client messages/audio to realtime API."""
@@ -113,17 +141,11 @@ async def onboarding_realtime(websocket: WebSocket):
                     data = await websocket.receive_json()
                     
                     if data.get("type") == "input_audio_buffer.append":
-                        # Forward audio chunk to realtime API
-                        await realtime_client.send_audio_chunk(
-                            session_id,
-                            data.get("audio", "")
-                        )
+                        await realtime_client.send_audio_chunk(session_id, data.get("audio", ""))
                     elif data.get("type") == "input_audio_buffer.commit":
-                        # Commit audio and request response
                         await realtime_client.commit_audio(session_id)
                         await realtime_client.create_response(session_id)
                     elif data.get("type") == "response.create":
-                        # Request response generation
                         await realtime_client.create_response(session_id)
                     
             except WebSocketDisconnect:
@@ -133,19 +155,67 @@ async def onboarding_realtime(websocket: WebSocket):
         
         async def server_to_client():
             """Forward realtime API events to client."""
+            nonlocal current_onboarding_update
             try:
                 async for event in realtime_client.listen(session_id):
                     # Forward all events to client
                     await websocket.send_json(event)
                     
-                    # Check for conversation completion via audio transcript
+                    # Handle Tool Calls (function calls)
+                    if event.get("type") == "response.output_item.done":
+                        item = event.get("item", {})
+                        if item.get("type") == "function_call":
+                            call_id = item.get("call_id")
+                            func_name = item.get("name")
+                            args_str = item.get("arguments", "{}")
+                            
+                            try:
+                                args = json.loads(args_str)
+                                
+                                # Handle Profile Updates
+                                if func_name == "update_profile":
+                                    field = args.get("field_name")
+                                    value = args.get("value")
+                                    current_onboarding_update["prefill_fields"][field] = value
+                                    logger.info(f"Extracted field: {field} = {value}")
+                                
+                                # Handle Status Updates
+                                elif func_name == "update_onboarding_status":
+                                    current_onboarding_update.update({
+                                        "page_completed": args.get("page_completed", False),
+                                        "highlight_fields": args.get("highlight_fields", []),
+                                        "missing_required_fields": args.get("missing_required_fields", []),
+                                        "suggested_options": args.get("suggested_options", [])
+                                    })
+                                    logger.info(f"UI Status Update: Page Completed={args.get('page_completed')}")
+
+                                # 1. Send the unified onboarding.update event
+                                await websocket.send_json({
+                                    "type": "onboarding.update",
+                                    **current_onboarding_update
+                                })
+                                
+                                # 2. Provide tool response back to AI
+                                ws = realtime_client.sessions.get(session_id)
+                                if ws:
+                                    response_event = {
+                                        "type": "conversation.item.create",
+                                        "item": {
+                                            "type": "function_call_output",
+                                            "call_id": call_id,
+                                            "output": json.dumps({"status": "success"})
+                                        }
+                                    }
+                                    await ws.send(json.dumps(response_event))
+                                    
+                            except json.JSONDecodeError:
+                                logger.error(f"Failed to parse tool arguments: {args_str}")
+
+                    # Check for conversation completion
                     if event.get("type") == "response.audio_transcript.done":
                         transcript = event.get("transcript", "")
-                        
-                        # Detect the farewell — AI says "welcome aboard kratorai" only at the very end
                         if "welcome aboard kratorai" in transcript.lower():
-                            logger.info(f"Detected onboarding farewell: {transcript[:100]}...")
-                            # Send completion AFTER the transcript (audio already queued on client)
+                            logger.info(f"Detected onboarding farewell")
                             await websocket.send_json({
                                 "type": "onboarding.complete",
                                 "final_summary": transcript
@@ -156,22 +226,14 @@ async def onboarding_realtime(websocket: WebSocket):
             except Exception as e:
                 logger.error(f"Error in server_to_client: {e}")
         
-        # Run both tasks concurrently
-        await asyncio.gather(
-            client_to_server(),
-            server_to_client()
-        )
+        await asyncio.gather(client_to_server(), server_to_client())
         
     except WebSocketDisconnect:
         logger.info(f"WebSocket disconnected: {session_id}")
     except Exception as e:
         logger.error(f"Error in onboarding realtime WebSocket: {e}")
-        await websocket.send_json({
-            "type": "error",
-            "error": str(e)
-        })
+        await websocket.send_json({"type": "error", "error": str(e)})
     finally:
-        # Cleanup
         await realtime_client.close_session(session_id)
         try:
             await websocket.close()
