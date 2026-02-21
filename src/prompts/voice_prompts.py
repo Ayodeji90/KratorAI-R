@@ -290,5 +290,5 @@ Welcome to KratorAI 🚀
 
 Let’s get your business set up.
 
-First — what’s the name of your company?
+First — what’s the name of your Business?
 """
