@@ -1,0 +1,593 @@
+KratorAI Brand Onboarding — Product
+Implementation Brief
+What This Document Is
+This is a product specification for the KratorAI brand knowledge extraction
+onboarding flow. It covers the full experience design, the question architecture, the
+voice/type input system, and how the captured data gets structured into a Brand
+Intelligence Profile. Developer and designer should read this together — the
+decisions in each discipline directly affect the other.
+
+The Core Design Principle
+Before anything else, both the developer and designer need to internalize one
+principle that governs every decision in this document:
+This is not a form. It is a conversation.
+Every time a design or engineering decision makes this feel like a form — a field to fill
+in, a required input, a progress bar counting steps — it is the wrong decision. Every
+time a decision makes it feel like a conversation — a question being asked, a
+response being heard, an intelligent follow-up — it is the right one.
+The business owner should leave onboarding feeling like they just talked to someone
+who genuinely understood their brand. Not like they just completed a setup wizard.
+
+Overview of What the Onboarding Must Accomplish
+The onboarding has one job: build a Brand Intelligence Profile that is rich enough for
+KratorAI's AI to generate content that sounds like this specific business and no other.
+That profile has five layers, each progressively harder to extract:
+
+1.​ What they sell — products, services, prices. Easy. Most onboarding flows get
+this.
+2.​ Who they sell to — audience description, customer psychology. Moderate.
+Most flows get a surface version of this.
+3.​ How they speak — tone, vocabulary, rhythm, cultural register. Hard. Most
+flows fail here because they ask people to describe their voice instead of
+demonstrating it.
+4.​ What they actually believe — their genuine opinions, their point of view,
+what makes them distinct as a person not just as a business. Very hard. Almost
+no tool captures this at all.
+5.​ How they naturally express themselves — not described, but captured live
+through their actual words, spoken or written without self-editing.
+The onboarding must reach layer five for every user. The design decisions below are
+all in service of that goal.
+
+The Full Experience Arc — What the User Should
+Feel at Each Stage
+Design every screen against this emotional sequence. If a screen doesn't serve one of
+these emotional states, reconsider why it exists.
+Anticipation — Something different is about to happen here.
+Engagement — This is actually a conversation, not a form.
+Surprise — It already sounds like me and we're not even done.
+Confidence — It genuinely understood my brand.
+Excitement — Thirty days of content, ready, looking like this.
+Relief — I don't have to do anything now.
+Awe — It just posted for me while I was doing something else.
+The onboarding covers the first five. The last two happen post-onboarding and need
+to be designed for separately — but the onboarding sets them up.
+
+Part One: The Opening Screen
+What it must do
+Set the frame. Signal that this is different from every other onboarding the user has
+experienced. Create anticipation without overwhelming.
+
+What it must not do
+Start with a progress bar. List the number of steps. Use the word "setup." Show a wall
+of fields.
+
+The copy approach
+The opening screen should carry a confident, human statement of what is about to
+happen. Something in this direction — the exact copy should be refined by your
+writer, but the content should be:
+●​
+●​
+●​
+●​
+
+Specific about what KratorAI will learn
+Clear that the result happens at the end
+Honest that it takes real input to work well
+Warm but not salesy
+
+An example of the right tone: "In the next few minutes, KratorAI is going to learn
+everything it needs to know about your brand — how you speak, who you sell to,
+what makes you different. By the time we're done, it'll sound like you."
+No bullet points listing features. No checkbox list of what onboarding covers. Just
+that statement and a single call to action to begin.
+
+The very first question
+Before entering the main question flow, ask one simple question in plain human
+language: the user's name and their business name. This is the first moment the
+voice mode is active — but the stakes are zero. They're just saying their name. This is
+deliberate. It introduces the voice interface at the lowest possible anxiety moment so
+it feels normal before anything demanding is asked.
+
+Part Two: The Input System — Voice and Type
+
+The fundamental decision
+Both voice and type are available throughout the onboarding. They are not equal
+choices presented at every question. The interface has a designed default for each
+question — voice for some, type for others — with a quiet, always-available toggle to
+switch.
+The designer's job is to make the default feel like the natural choice for that question,
+so the toggle is rarely needed but always available.
+
+Voice default questions — these questions extract personality and
+natural expression
+The following questions should default to voice input because the signal lives in how
+the person speaks, not in what they carefully type:
+●​
+●​
+●​
+●​
+●​
+●​
+
+Describe your business in plain language
+Who is your best customer — describe them as a person
+What do you believe that competitors wouldn't say publicly
+What do your customers most often misunderstand
+What are you most proud of about your business
+If your brand was a person at a dinner party, how would they behave
+
+For these questions, the microphone should be already listening when the
+question appears. There is no button to press to begin speaking. The interface
+detects voice activity the same way a conversation does — you just start talking.
+There is a subtle visual indicator that the system is listening, but it should not
+resemble a recording button. It should resemble something listening, not something
+recording.
+As the user speaks, transcription appears on screen in real time in a large, readable
+text field. When they stop speaking, the transcription sits in an editable field they can
+correct, add to, or leave as is. This design removes the anxiety about imprecision in
+speech — they know they can fix it. So they speak freely.
+A quiet "prefer to type instead?" affordance sits below the listening indicator. Small.
+Not drawing attention. Available if needed.
+
+Type default questions — these questions need precision
+The following questions require exact information that transcription errors would
+corrupt:
+
+●​
+●​
+●​
+●​
+●​
+●​
+●​
+
+Products and services with specific names
+Prices
+Competitor names
+The signature phrases they always use — these need to be verbatim
+Words and phrases their content should never use
+Posting frequency preference
+Platform priorities
+
+For these questions, the interface presents a clean text field with the cursor already
+active. No microphone prompt. No voice affordance drawing attention. Just the
+question and the space to answer.
+A quiet "prefer to speak instead?" affordance is available below the text field for the
+one or two users who genuinely prefer it, but it is not the visual focus.
+
+Hybrid questions — the user decides naturally
+Some questions work equally well in either mode. For these, the interface presents a
+voice listener and a text field side by side with equal visual weight. The user naturally
+gravitates to whichever feels right. No decision needs to be made — they either start
+speaking or start typing, and the interface responds accordingly.
+The hybrid questions are:
+●​ The caption the user would write tonight for their best product — this is their
+live voice sample
+●​ What their customer's world looks like right now
+●​ An example of content from another brand they admire
+
+The one design mistake to avoid
+Do not present voice and type as a prominent binary choice at the start of every
+question. A toggle at the top of every screen asking "how would you like to answer?"
+creates decision fatigue and causes most users to default to typing — because typing
+feels safer. The result is a text-based onboarding with a voice feature nobody uses. All
+the infrastructure cost, none of the brand signal benefit.
+The mode follows the question. The user feels like the interface knows what it's
+asking for. That is the right experience.
+
+Part Three: The Fourteen Questions — Full
+Specification
+Below is the complete question architecture. For each question: the question text,
+the default input mode, what brand signal it is designed to extract, and any
+implementation notes.
+
+Question 1 — The plain language description
+"Describe what your business does in one or two sentences — the way you'd explain
+it to someone you just met, not the way you'd write it on a website."
+Default mode: Voice
+Signal extracted: Natural vocabulary, genuine simplicity or complexity of the offering,
+how the owner frames their own business.
+Implementation note: The phrase "not the way you'd write it on a website" is doing
+important work. It gives the user explicit permission to be casual. Do not remove it or
+soften it.
+
+Question 2 — The customer description
+"Who is your best customer? Don't describe them by age or income — describe
+them by what keeps them up at night, what they want more than anything, and
+why they came to you specifically."
+Default mode: Voice
+Signal extracted: Customer psychology, emotional drivers, what the brand is actually
+solving at a human level.
+Implementation note: The instruction "don't describe them by age or income" is
+critical. Without it, every user answers with demographics. Demographics are nearly
+useless for content generation. Anxieties and desires are the useful signal.
+
+Question 3 — Products and prices
+
+"What do you sell, and what does it actually cost? List your main products or
+services and their prices."
+Default mode: Type
+Signal extracted: Product specifics, price anchors, portfolio breadth.
+Implementation note: Allow multiple entries. Consider a simple repeating field —
+product name, price — that the user can add rows to. Keep it visually minimal. This is
+a data capture question, not a conversation question, and it should feel efficient.
+
+Question 4 — The live voice sample
+"Write a caption for your best-selling product or service right now — the way you'd
+actually write it if you were posting it yourself tonight. Don't make it perfect. Just
+write it the way it naturally comes to you."
+Default mode: Hybrid — text field is prominent, voice is equally available
+Signal extracted: This is the single most important question in the onboarding. The
+answer is the live voice sample — actual vocabulary, sentence rhythm, emoji usage,
+formality level, call-to-action style, cultural register. Everything the system needs to
+calibrate its generation layer.
+Implementation note: This field must have no character counter, no formatting
+guidance, no example shown. The moment the user is given a format to follow, they
+follow it instead of writing naturally. Large open text area. No constraints. The
+instruction "don't make it perfect" is doing essential work — leave it exactly as
+written.
+
+Question 5 — Signature phrases
+"What's a phrase or expression you use all the time when talking to customers —
+something that's just very you? Could be a greeting, a closing line, something you
+say when you're excited. Anything."
+Default mode: Type
+Signal extracted: Signature vocabulary, recurring phrases, brand-specific expressions
+that become anchors in content generation.
+
+Implementation note: Allow multiple entries. Users often have more than one. A
+simple "add another" affordance after the first entry is sufficient.
+
+Question 6 — Aspirational voice reference
+"Show me an example of content from another brand that you wish your content
+looked or sounded like. It can be a post, a website, anything. What specifically do
+you like about it?"
+Default mode: Hybrid
+Signal extracted: Aspirational voice benchmark, specific stylistic preferences, gap
+between current voice and desired voice.
+Implementation note: Allow either a URL paste or a text description of the content.
+Not everyone will have a URL ready. The text description of what they admire is often
+more useful than the link itself because it forces them to articulate what they're
+drawn to.
+
+Question 7 — The point of view
+"What's something your business genuinely believes that most of your competitors
+would never say publicly?"
+Default mode: Voice
+Signal extracted: Brand conviction, competitive differentiation, intellectual
+positioning.
+Implementation note: This question is intentionally slightly uncomfortable. Some
+users will pause before answering. Do not add helper text that softens the question
+or offers examples. The discomfort is productive — it's what produces honest, specific
+answers rather than safe, generic ones. Let the silence sit.
+
+Question 8 — The recurring explanation
+"What do your customers misunderstand about what you do or sell — the thing you
+find yourself explaining over and over again?"
+
+Default mode: Voice
+Signal extracted: Educational content angles, common objections, the business
+owner's most persuasive natural language — because this is the explanation they've
+delivered many times and have refined.
+Implementation note: Frame this as something they explain "over and over" rather
+than something customers "get wrong." The first framing positions the business
+owner as a patient educator. The second positions their customers as mistaken. The
+first produces warmer, more useful answers.
+
+Question 9 — Source of pride
+"What are you most proud of about your business — not what you're supposed to
+say, but what actually makes you feel like you're doing something worth doing?"
+Default mode: Voice
+Signal extracted: Core brand values, authentic differentiators, emotional content
+anchors — the things the business genuinely cares about, which show in content
+that performs well.
+Implementation note: The phrase "not what you're supposed to say" is essential.
+Remove it and users give the rehearsed answer. Keep it and many users give the
+honest answer, which is almost always more interesting and more useful.
+
+Question 10 — Competitors
+"Name two or three businesses you consider your main competitors — just the
+names that come to mind."
+Default mode: Type
+Signal extracted: Competitive reference frame for avoidance and implicit
+differentiation.
+Implementation note: Keep this simple. This is not a competitive analysis. You just
+need the names so content doesn't accidentally reference them favorably. Two to
+three is enough. Don't prompt for more.
+
+Question 11 — Customer's current world
+"What does your customer's world look like right now? What's happening in their
+life, their business, or their community that's relevant to what you sell?"
+Default mode: Hybrid
+Signal extracted: Seasonal relevance, cultural moment awareness, customer life
+context — what makes content feel timely rather than generic.
+Implementation note: This is the question that produces the most variance between
+users. Some will give a rich, specific answer that immediately informs the content
+strategy. Others will give a blank stare. If a user struggles with this, a single prompt —
+"Think about what time of year it is and what your customers are dealing with right
+now" — is sufficient to unlock an answer.
+
+Question 12 — Guardrails
+"What should your content never say or do? Any topics, tones, claims, or approaches
+that would feel wrong or damage your brand?"
+Default mode: Type
+Signal extracted: Content guardrails, brand safety parameters, negative brand signals.
+Implementation note: Negative constraints are as important as positive ones. A
+children's education brand that never wants political commentary, a health coach
+who never wants weight-loss before-and-after framing — these prevent the most
+trust-damaging content failures. Users answer this question more easily than most
+because violations feel immediately wrong to them.
+
+Question 13 — Posting parameters
+"How often do you want to post, and are there specific days or times when you know
+your audience is most active — even if it's just a feeling from experience?"
+Default mode: Type
+Signal extracted: Posting frequency preference, timing intelligence, calendar
+parameters.
+
+Implementation note: Offer sensible defaults that users can adjust — a simple
+frequency selector (daily, 5x/week, 3x/week, etc.) alongside a free-text field for timing
+notes. The defaults remove friction for users who don't have strong preferences. The
+free text captures the genuine knowledge of users who do.
+
+Question 14 — The brand personality
+"If your brand was a person at a dinner party, how would they behave? Would they
+be the loudest person in the room or the most interesting quiet one? Would they tell
+jokes or ask deep questions? Would they dress to impress or dress to be
+comfortable? Would they talk about themselves or ask about others?"
+Default mode: Voice
+Signal extracted: Holistic personality profile, behavioral tendencies, emotional
+register — the gestalt of the brand personality in a form the AI can reason from.
+Implementation note: This is the last question and the most open. The specific
+examples in the question — loudest or quietest, jokes or deep questions — are not
+exhaustive. They are prompts that unlock the user's imagination. The user will often
+go beyond the examples and describe their brand in ways that are unexpectedly
+precise and deeply useful. Let them run with it.
+
+Part Four: The Mid-Onboarding Wow Moment
+This is a product feature, not a design flourish. It requires developer and designer to
+build it together deliberately.
+After questions 1 through 4 are complete — once the system has the plain
+language description, the customer description, the product information, and the
+live voice sample — KratorAI generates a single piece of sample content in real time
+and shows it to the user before they continue.
+Not at the end. Not as a preview of what's coming. Right there, in the middle of the
+onboarding flow.
+The content shown should be one post — the type most appropriate for the user's
+primary platform — generated using the partial Brand Intelligence Profile built so far.
+
+The moment it appears, the interface says something like: "Here's what KratorAI
+already sounds like in your voice. We're only halfway through — it gets more
+accurate from here."
+Why this matters:
+Before this moment, the user is filling in an onboarding flow with uncertain faith that
+something useful will emerge. After this moment, they have seen evidence. They are
+now invested in completing the onboarding because they want to see how much
+better it gets with the remaining questions.
+This single moment will measurably reduce onboarding abandonment. It converts a
+leap of faith into a demonstrated reality midway through the process.
+Developer implementation note:
+This requires the generation layer to be callable with a partial Brand Intelligence
+Profile — not all fourteen questions answered, just the first four. The generation
+prompt for this mid-flow call should explicitly note that the profile is partial and
+instruct the model to produce its best output from available information. The result
+does not need to be perfect. It needs to be specific enough that the user recognizes
+their own brand in it.
+
+Part Five: The Brand Intelligence Profile — Data
+Structure
+Everything captured in the fourteen questions gets structured into a Brand
+Intelligence Profile. This is the object your AI reasons from when generating every
+piece of content. It is not a static record — it is updated continuously throughout the
+user's time on the platform.
+Developer note: The profile should be designed as a structured document that can
+be passed in full as context to the generation layer. Every field should be queryable
+individually for specific use cases (e.g., pulling only the guardrails for a safety check)
+and available in full for generation prompts.
+
+BRAND IDENTITY
+●​ Business name
+
+●​
+●​
+●​
+●​
+
+Industry and category
+Location and cultural context (city, country, cultural register)
+Business stage: new / established / scaling
+Price positioning: budget / mid / premium / luxury
+
+OFFERING MAP
+●​ Products and services — name, price, flagged as bestseller or seasonal
+●​ Products or services to never promote — discontinued, out of stock
+●​ Seasonal offerings with timing notes
+
+AUDIENCE PROFILE
+●​ Customer psychographic description (from Question 2 — stored verbatim, not
+summarized)
+●​ Core customer anxiety — what keeps them up at night
+●​ Core customer desire — what they want most
+●​ Why they chose this brand specifically
+●​ Customer's current moment — what's happening in their world right now
+
+VOICE FINGERPRINT
+●​
+●​
+●​
+●​
+●​
+●​
+●​
+●​
+●​
+●​
+●​
+
+Formality level: 1–5 (1 = very casual / Lagos slang level, 5 = very formal)
+Warmth level: 1–5
+Humor presence: none / occasional / frequent
+Cultural register: specific expressions and references that are natural for this
+brand
+Emoji usage: none / minimal / moderate / heavy
+Caption length preference: short under 50 words / medium 50–150 / long over
+150
+Signature phrases: verbatim list from Question 5, updated over time
+Never-use words and phrases: verbatim list from Question 12
+Live voice sample: the verbatim caption from Question 4 — this is the most
+important field in the entire profile
+Aspirational voice reference: URL or description from Question 6
+Running approved post samples: the last 3–5 posts the user approved without
+editing, stored verbatim — updated continuously
+
+POINT OF VIEW
+●​ Core brand belief (from Question 7)
+●​ Primary educational angle — the thing they explain repeatedly (from Question
+8)
+●​ Source of authentic pride (from Question 9)
+●​ Brand personality archetype (from Question 14 — stored verbatim)
+
+COMPETITIVE CONTEXT
+●​ Competitor names (from Question 10)
+●​ Implicit differentiation notes — derived by the system from what the brand
+believes vs. what category competitors typically say
+
+CONTENT PARAMETERS
+●​
+●​
+●​
+●​
+●​
+
+Posting frequency
+Platform priorities with ranking
+Preferred posting times and days
+Content guardrails (from Question 12)
+Content pillars — these are derived by the system from the full profile, not
+asked directly
+
+PERFORMANCE INTELLIGENCE (empty at onboarding, populated
+over time)
+●​
+●​
+●​
+●​
+●​
+
+Best performing content types
+Best performing posting times
+Audience engagement patterns
+Month-over-month strategic adjustments
+Edit pattern analysis — what the user changes in generated content
+
+Part Six: The Confirmation Screen
+After all fourteen questions are complete and before the calendar is generated, show
+the user a summary of what KratorAI learned about their brand.
+This is not raw transcription. It is a clean, human-readable version of their Brand
+Intelligence Profile — written in plain language that a business owner can read and
+recognize themselves in.
+Every section of the summary should be editable. A user who sees their brand
+described slightly wrong should be able to correct it immediately. Every correction is
+itself brand signal — it tells the system where its understanding needs calibration.
+Designer note: The confirmation screen should feel like a reveal, not a review. The
+visual design should give the user the sense that the system genuinely learned
+something about them — not that they're proofing a database entry. The language
+of each section should be warm and specific, not clinical.
+Developer note: Every edit made on this screen triggers an update to the
+corresponding field in the Brand Intelligence Profile. Edits made here are flagged as
+high-confidence corrections because the user made them deliberately after
+reviewing the system's understanding.
+
+Part Seven: The Calendar Reveal
+This is not an end screen. It is a performance.
+When the first 30-day content calendar is ready, present it as a reveal rather than a
+display.
+Show the first week — not all 30 days at once — with each post showing: the day, the
+platform, the content type, and a preview of the caption. Captions are expandable.
+The user clicks to read the full post.
+The moment a user reads the first full caption and recognizes their own voice in it is
+the second major wow moment of the onboarding. Design the screen around that
+moment. Give the caption enough visual space to be read properly. Do not bury it in
+a dense calendar grid.
+
+Under the calendar, one line of copy does critical emotional work: "KratorAI will
+publish these automatically. You don't need to do anything. But you can review, edit,
+or approve any post before it goes out."
+This removes obligation without removing control. Relief plus safety. That is the
+emotional state the user should leave onboarding in.
+
+Part Eight: The Edit-Capture System — How the
+Profile Gets Richer Over Time
+This section is primarily for the developer and is one of the most important
+architectural decisions in the entire product.
+Every time a user edits a generated post, they are teaching KratorAI something
+specific about their brand voice. The system must capture this signal automatically.
+What to capture:
+When a user edits a post before approving it, the system stores both the original
+generated version and the edited version. It then compares the two and extracts the
+delta — what was added, what was removed, what was changed.
+Over time, patterns in these deltas update the Voice Fingerprint automatically:
+●​ User consistently removes exclamation marks → formality level increases
+●​ User consistently adds a specific phrase → that phrase gets added to signature
+phrases
+●​ User consistently removes a word → that word gets added to the never-use list
+●​ User consistently shortens captions → length preference adjusts downward
+●​ User consistently changes the call-to-action format → CTA pattern in the profile
+updates
+What to capture from approvals:
+When a user approves a post without any edits, that post is added to the Running
+Approved Post Samples field in the Voice Fingerprint — stored verbatim. These
+become the most reliable voice examples in the profile because they represent
+content the user considered accurate enough to publish as-is.
+When the Running Approved Post Samples field contains 5 or more posts, these
+should be weighted more heavily in the generation prompt than the original
+
+onboarding voice sample, because they represent the system's most calibrated
+understanding of the brand voice to date.
+What to capture from rejections:
+When a user rejects a post outright, the system flags the content type, angle, or
+structural pattern of that post as low-fit. Repeated rejections of the same content
+type update the guardrails automatically.
+Developer note: This system does not require human review or manual tagging. It
+runs automatically in the background on every user interaction. The result over six
+months of use is a Brand Intelligence Profile that is dramatically richer and more
+calibrated than anything that could be captured at onboarding — built from
+hundreds of micro-corrections the user made naturally, without ever being aware
+they were training the system.
+This is the compounding mechanism that makes KratorAI harder to leave over time.
+At month one, the voice is good. At month six, it approaches uncanny. A user who
+considers switching to a competitor at month six discovers that no competitor
+sounds like them, because no competitor has been listening and learning for six
+months.
+
+Summary: What Developer and Designer Need to
+Build Together
+For the designer:
+The experience arc from anticipation through excitement governs every screen.
+Every design decision should be tested against the question: does this feel like a
+conversation or a form? The mid-onboarding wow moment and the calendar reveal
+are the two highest-stakes screens in the entire product — invest disproportionate
+design time in them. The voice/type split must feel seamless, with the mode
+following the question rather than the user being asked to choose.
+For the developer:
+The Brand Intelligence Profile is a living document, not a static record. It must be
+structured to be passed as full context to the generation layer, updatable in real time
+from user interactions, and queryable by field for specific use cases. The generation
+layer must be callable with a partial profile for the mid-onboarding wow moment.
+
+The edit-capture system runs automatically on every user interaction and is one of
+the most strategically important features in the product — build it from the start, not
+as a later addition.
+Together:
+The voice mode transcription, the mid-flow content generation, and the edit-capture
+system all require close coordination between design and engineering. Design the
+experience first — what should the user feel at each moment — then engineer to
+enable it. Do not let engineering constraints dictate the experience design without a
+conversation about what the constraint costs the user.
+
+That is the full implementation brief. It covers the experience design, the question
+architecture with full rationale, the input system, the data structure, the wow
+moments, and the ongoing enrichment mechanism. Your team should be able to
+build from this directly.
+
+

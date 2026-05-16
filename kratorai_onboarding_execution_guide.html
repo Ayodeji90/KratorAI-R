@@ -1,0 +1,385 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); }
+  .guide { padding: 0 0 32px; }
+  .phase { margin-bottom: 28px; border: 1px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; }
+  .phase-header { padding: 14px 20px; display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; }
+  .phase-header:hover { background: var(--color-background-secondary); }
+  .phase-badge { font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+  .phase-title { font-size: 15px; font-weight: 500; color: var(--color-text-primary); flex: 1; }
+  .phase-meta { font-size: 12px; color: var(--color-text-tertiary); white-space: nowrap; }
+  .phase-chevron { font-size: 12px; color: var(--color-text-tertiary); transition: transform 0.2s; }
+  .phase-body { padding: 0 20px 20px; border-top: 1px solid var(--color-border-tertiary); }
+  .phase-goal { font-size: 13px; color: var(--color-text-secondary); padding: 12px 0 8px; line-height: 1.6; border-bottom: 1px solid var(--color-border-tertiary); margin-bottom: 14px; }
+  .task { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--color-border-tertiary); }
+  .task:last-child { border-bottom: none; }
+  .task-num { font-size: 12px; font-weight: 500; color: var(--color-text-tertiary); min-width: 22px; padding-top: 1px; }
+  .task-body { flex: 1; }
+  .task-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 4px; }
+  .task-desc { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; margin-bottom: 6px; }
+  .task-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+  .tag-dev { background: #E6F1FB; color: #0C447C; }
+  .tag-design { background: #EEEDFE; color: #3C3489; }
+  .tag-product { background: #E1F5EE; color: #085041; }
+  .tag-critical { background: #FCEBEB; color: #791F1F; }
+  .tag-ai { background: #FAEEDA; color: #633806; }
+  @media (prefers-color-scheme: dark) {
+    .tag-dev { background: #0C447C; color: #B5D4F4; }
+    .tag-design { background: #3C3489; color: #CECBF6; }
+    .tag-product { background: #085041; color: #9FE1CB; }
+    .tag-critical { background: #791F1F; color: #F7C1C1; }
+    .tag-ai { background: #633806; color: #FAC775; }
+  }
+  .phase-body.collapsed { display: none; }
+  .phase-chevron.open { transform: rotate(180deg); }
+  .wow-callout { background: var(--color-background-secondary); border-left: 3px solid #EF9F27; border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0; padding: 10px 14px; margin: 8px 0 10px; font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
+  .wow-callout strong { color: var(--color-text-primary); font-weight: 500; }
+  .section-label { font-size: 11px; font-weight: 500; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; padding: 10px 0 6px; }
+</style>
+
+<div class="guide">
+
+  <!-- Phase 1 -->
+  <div class="phase">
+    <div class="phase-header" onclick="toggle(this)">
+      <span class="phase-badge" style="background:#E6F1FB;color:#0C447C;">Phase 1</span>
+      <span class="phase-title">Foundation — Brand Intelligence Profile structure</span>
+      <span class="phase-meta">Days 1–3 · Before any UI</span>
+      <span class="phase-chevron open">▾</span>
+    </div>
+    <div class="phase-body">
+      <div class="phase-goal">Goal: Define the data structure your entire product reasons from. Nothing else gets built until this is locked. Every screen, every AI call, every enrichment loop feeds into or reads from this object.</div>
+
+      <div class="section-label">Tasks</div>
+
+      <div class="task">
+        <div class="task-num">1.1</div>
+        <div class="task-body">
+          <div class="task-title">Define the Brand Intelligence Profile schema</div>
+          <div class="task-desc">Create the full JSON schema: Brand Identity, Offering Map, Audience Profile, Voice Fingerprint, Point of View, Competitive Context, Content Parameters, Performance Intelligence. Every field name, type, and whether it's required or optional. Include a <code>confidence_score</code> per field (0–1) that starts low and rises as more evidence accumulates.</div>
+          <div class="task-tags"><span class="tag tag-dev">Dev</span><span class="tag tag-product">Product</span><span class="tag tag-critical">Critical path</span></div>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-num">1.2</div>
+        <div class="task-body">
+          <div class="task-title">Define the Voice Fingerprint sub-schema</div>
+          <div class="task-desc">Formality (1–5), warmth (1–5), humor (none/occasional/frequent), emoji usage (none/minimal/moderate/heavy), caption length preference, cultural register (free text), signature phrases (string array), never-use list (string array), live voice sample (verbatim string), running approved samples (last 5, string array). This sub-schema is read on every single content generation call — get it right before anything else.</div>
+          <div class="task-tags"><span class="tag tag-dev">Dev</span><span class="tag tag-ai">AI</span><span class="tag tag-critical">Critical path</span></div>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-num">1.3</div>
+        <div class="task-body">
+          <div class="task-title">Build the profile write and read API</div>
+          <div class="task-desc">Simple endpoints: create profile, update field(s), read full profile, read specific fields. Must support partial profiles (not all 14 questions answered yet) — partial profiles are used for the mid-onboarding wow moment. Write tests before any UI touches this.</div>
+          <div class="task-tags"><span class="tag tag-dev">Dev</span></div>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-num">1.4</div>
+        <div class="task-body">
+          <div class="task-title">Map each of the 14 onboarding questions to profile fields</div>
+          <div class="task-desc">A clear document showing: question number → which profile field(s) it populates → how the raw answer gets transformed (verbatim storage vs structured extraction vs AI-parsed summary). Some questions populate multiple fields. Question 4 (live voice sample) populates the Voice Fingerprint verbatim — it must never be summarised or processed.</div>
+          <div class="task-tags"><span class="tag tag-product">Product</span><span class="tag tag-ai">AI</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 2 -->
+  <div class="phase">
+    <div class="phase-header" onclick="toggle(this)">
+      <span class="phase-badge" style="background:#EEEDFE;color:#3C3489;">Phase 2</span>
+      <span class="phase-title">AI conversation engine — the two-way brain</span>
+      <span class="phase-meta">Days 2–5 · Parallel with Phase 1</span>
+      <span class="phase-chevron open">▾</span>
+    </div>
+    <div class="phase-body">
+      <div class="phase-goal">Goal: Build the AI layer that conducts the onboarding as a real conversation — asking questions, acknowledging answers, transitioning naturally. This is the core product experience. The UI wraps this; it does not drive it.</div>
+
+      <div class="section-label">Tasks</div>
+
+      <div class="task">
+        <div class="task-num">2.1</div>
+        <div class="task-body">
+          <div class="task-title">Write the master onboarding system prompt</div>
+          <div class="task-desc">This prompt tells the AI: you are conducting a brand discovery conversation for KratorAI. Your job is to ask the 14 questions in sequence, acknowledge each answer before moving to the next, adapt your transition based on what was said (if they mention a competitor in Q1, reference it in Q10), handle tangents by capturing the signal and redirecting gracefully, never use numbered question labels. Include the full question list with their extraction intent, the transition guidelines, and examples of good vs bad acknowledgements.</div>
+          <div class="task-tags"><span class="tag tag-ai">AI</span><span class="task tag-product">Product</span><span class="tag tag-critical">Critical path</span></div>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-num">2.2</div>
+        <div class="task-body">
+          <div class="task-title">Build the conversation state manager</div>
+          <div class="task-desc">Tracks: which questions have been answered, what has been extracted so far, the full conversation transcript, and the partial Brand Intelligence Profile. The state is passed into every AI call so the conversation has memory. On each turn: AI receives full state + user's latest message, returns next question + profile field updates.</div>
+          <div class="task-tags"><span class="tag tag-dev">Dev</span><span class="tag tag-ai">AI</span></div>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-num">2.3</div>
+        <div class="task-body">
+          <div class="task-title">Build the profile extraction parser</div>
+          <div class="task-desc">After each user response, a secondary AI call (lightweight, fast) extracts the structured data and writes it to the profile. This runs asynchronously — the user sees the conversation flowing while the extraction happens in the background. Define the extraction prompt per question: Q3 extracts product name + price pairs, Q5 extracts verbatim phrases as an array, Q4 stores the exact text with no modification.</div>
+          <div class="task-tags"><span class="tag tag-dev">Dev</span><span class="tag tag-ai">AI</span></div>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-num">2.4</div>
+        <div class="task-body">
+          <div class="task-title">Test the conversation for naturalness — manually, not with metrics</div>
+          <div class="task-desc">Every team member goes through the full 14-question onboarding as if they are a Nigerian business owner. Note every moment it felt like a form rather than a conversation. Note every acknowledgement that felt generic or robotic. Note every transition that felt abrupt. Fix these in the system prompt before any UI work begins. The bar is: it should feel like talking to a smart brand consultant who genuinely wants to understand your business.</div>
+          <div class="task-tags"><span class="tag tag-product">Product</span><span class="tag tag-ai">AI</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 3 -->
+  <div class="phase">
+    <div class="phase-header" onclick="toggle(this)">
+      <span class="phase-badge" style="background:#E1F5EE;color:#085041;">Phase 3</span>
+      <span class="phase-title">Voice + type input system</span>
+      <span class="phase-meta">Days 4–7</span>
+      <span class="phase-chevron open">▾</span>
+    </div>
+    <div class="phase-body">
+      <div class="phase-goal">Goal: Build the mixed-mode input layer. Voice is the ambient default for personality questions. Type is the default for precision questions. The user never makes a binary "voice or type" decision — the interface handles it invisibly.</div>
+
+      <div class="section-label">Tasks</div>
+
+      <div class="task">
+        <div class="task-num">3.1</div>
+        <div class="task-body">
+          <div class="task-title">Assign input mode to each of the 14 questions</div>
+          <div class="task-desc">Voice default: Q1, Q2, Q7, Q8, Q9, Q14. Type default: Q3 (products/prices), Q5 (signature phrases), Q10 (competitors), Q12 (guardrails), Q13 (posting frequency). Hybrid (equal weight): Q4 (live voice sample), Q6 (aspirational reference), Q11 (customer's current world). Lock this list before any UI implementation begins.</div>
+          <div class="task-tags"><span class="tag tag-product">Product</span><span class="tag tag-design">Design</span></div>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-num">3.2</div>
+        <div class="task-body">
+          <div class="task-title">Implement voice capture with real-time transcription</div>
+          <div class="task-desc">Use Web Speech API or a library like Whisper-based transcription. Key requirements: microphone activates automatically when a voice-default question appears (no button press to begin), transcription appears in real time in an editable text field, the field is large and readable, the user can edit the transcription before confirming. Visual listening indicator must not resemble a recording button — it should feel ambient, not performative.</div>
+          <div class="task-tags"><span class="tag tag-dev">Dev</span><span class="tag tag-critical">Critical path</span></div>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-num">3.3</div>
+        <div class="task-body">
+          <div class="task-title">Build the quiet mode toggle</div>
+          <div class="task-desc">Small, unobtrusive toggle below the listening indicator for voice-default questions: "prefer to type instead?" And below the text field for type-default questions: "prefer to speak instead?" The toggle is available but not prominent. It must never be the first thing the user sees on any question screen. Test that switching modes mid-answer carries the content across (partial transcription becomes the starting text in the type field).</div>
+          <div class="task-tags"><span class="tag tag-dev">Dev</span><span class="tag tag-design">Design</span></div>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-num">3.4</div>
+        <div class="task-body">
+          <div class="task-title">Handle tangents in voice input</div>
+          <div class="task-desc">When a user speaks beyond the scope of the current question, the system should not cut them off. All spoken content is captured. The conversation AI then acknowledges what they said, extracts any relevant brand signal from the tangent into the appropriate profile fields, and naturally returns to the current question. This requires the parser (2.3) to scan for off-question brand signals in every turn.</div>
+          <div class="task-tags"><span class="tag tag-dev">Dev</span><span class="tag tag-ai">AI</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 4 -->
+  <div class="phase">
+    <div class="phase-header" onclick="toggle(this)">
+      <span class="phase-badge" style="background:#FAEEDA;color:#633806;">Phase 4</span>
+      <span class="phase-title">The mid-onboarding wow moment</span>
+      <span class="phase-meta">Days 6–8 · Highest priority feature</span>
+      <span class="phase-chevron open">▾</span>
+    </div>
+    <div class="phase-body">
+      <div class="phase-goal">Goal: After question 4, generate one piece of sample content in real time and show it inside the onboarding flow. This converts a leap of faith into demonstrated proof and is the single most important activation moment in the product.</div>
+
+      <div class="wow-callout"><strong>Why this is non-negotiable:</strong> Without this moment, the user completes onboarding on faith alone. With it, they have seen evidence by question 5. Onboarding completion rates and first-week retention will measurably differ with vs without this feature. Build it before anything decorative.</div>
+
+      <div class="section-label">Tasks</div>
+
+      <div class="task">
+        <div class="task-num">4.1</div>
+        <div class="task-body">
+          <div class="task-title">Build the partial-profile generation prompt</div>
+          <div class="task-desc">A generation prompt specifically designed for partial profiles (Q1–Q4 complete). The prompt must: acknowledge that the profile is partial, use the live voice sample from Q4 as a few-shot example (not as a data description — as an actual style example: "generate content that matches this style: [verbatim Q4 answer]"), generate the single highest-confidence content type for the user's industry, keep the result short enough to be immediately readable on screen.</div>
+          <div class="task-tags"><span class="tag tag-ai">AI</span><span class="tag tag-critical">Critical path</span></div>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-num">4.2</div>
+        <div class="task-body">
+          <div class="task-title">Design the wow moment screen</div>
+          <div class="task-desc">The generated content appears between Q4 and Q5 in the conversation flow. It should feel like the AI pausing to show what it has learned so far — not like a modal or an interruption. The copy around it: "Here's what KratorAI already sounds like in your voice. We're only halfway through — it gets more accurate from here." The generated content displays in a styled post preview (platform-appropriate framing). One button: "Continue" to proceed to Q5.</div>
+          <div class="task-tags"><span class="tag tag-design">Design</span><span class="tag tag-critical">Critical path</span></div>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-num">4.3</div>
+        <div class="task-num">4.3</div>
+        <div class="task-body">
+          <div class="task-title">Measure the wow moment's impact from day one</div>
+          <div class="task-desc">Log: time spent on the wow moment screen, whether the user read the generated content (scroll depth or time threshold), whether they edited the generated content, onboarding completion rate after vs before this screen. These are your early signal on whether the generated content is landing. If users spend less than 5 seconds on it, the content is not landing — debug the generation prompt.</div>
+          <div class="task-tags"><span class="tag tag-dev">Dev</span><span class="tag tag-product">Product</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 5 -->
+  <div class="phase">
+    <div class="phase-header" onclick="toggle(this)">
+      <span class="phase-badge" style="background:#E1F5EE;color:#085041;">Phase 5</span>
+      <span class="phase-title">Confirmation screen + calendar reveal</span>
+      <span class="phase-meta">Days 8–11</span>
+      <span class="phase-chevron open">▾</span>
+    </div>
+    <div class="phase-body">
+      <div class="phase-goal">Goal: After all 14 questions, show the user what KratorAI learned (editable summary), then reveal the first week of content as a designed moment — not a list.</div>
+
+      <div class="section-label">Tasks</div>
+
+      <div class="task">
+        <div class="task-num">5.1</div>
+        <div class="task-body">
+          <div class="task-title">Build the brand summary generator</div>
+          <div class="task-desc">An AI prompt that takes the full Brand Intelligence Profile and generates a warm, human-readable brand summary — not a field listing, a natural-language description of the brand. Each section is editable. Every edit triggers a profile field update and is flagged as a high-confidence correction. The summary should sound like a smart brand consultant describing a client's brand after a discovery session.</div>
+          <div class="task-tags"><span class="tag tag-ai">AI</span><span class="tag tag-dev">Dev</span></div>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-num">5.2</div>
+        <div class="task-body">
+          <div class="task-title">Design the confirmation screen as a reveal</div>
+          <div class="task-desc">Not a review form. A reveal. Visual design should give the user the sense that the system genuinely learned something about them. Each section of the summary appears as a distinct readable card. Edit mode available per section — not an "edit all" form. Tone is warm and specific: "Your brand speaks like a trusted expert — direct, warm, never generic." Not: "Formality: 2, Warmth: 4."</div>
+          <div class="task-tags"><span class="tag tag-design">Design</span></div>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-num">5.3</div>
+        <div class="task-body">
+          <div class="task-title">Design the calendar reveal screen</div>
+          <div class="task-desc">Show the first 7 days only. Each post shows: day, platform, content type, caption preview (first 2 lines). Captions expand on tap/click to full post. The second wow moment happens when a user reads the first full caption and hears their own voice. Give captions enough space to be read. Below the calendar, the single most important line of copy in the product: "KratorAI will publish these automatically. You don't need to do anything. But you can review, edit, or approve any post before it goes out."</div>
+          <div class="task-tags"><span class="tag tag-design">Design</span><span class="tag tag-product">Product</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 6 -->
+  <div class="phase">
+    <div class="phase-header" onclick="toggle(this)">
+      <span class="phase-badge" style="background:#FCEBEB;color:#791F1F;">Phase 6</span>
+      <span class="phase-title">Edit-capture system — the compounding advantage</span>
+      <span class="phase-meta">Days 10–14 · Build from day one, not later</span>
+      <span class="phase-chevron open">▾</span>
+    </div>
+    <div class="phase-body">
+      <div class="phase-goal">Goal: Every user interaction with generated content teaches the system something. This is the mechanism that makes KratorAI irreplaceable at month 6. It must be built from the start — retrofitting it is significantly harder.</div>
+
+      <div class="wow-callout"><strong>The compounding logic:</strong> At month 1, the voice is good. At month 6, it approaches uncanny — built from hundreds of micro-corrections the user made naturally, without ever being aware they were training the system. A competitor starting fresh at month 6 cannot replicate 6 months of learning.</div>
+
+      <div class="section-label">Tasks</div>
+
+      <div class="task">
+        <div class="task-num">6.1</div>
+        <div class="task-body">
+          <div class="task-title">Build the edit diff capture system</div>
+          <div class="task-desc">When a user edits a generated post, store both original and edited versions. Run a diff. Extract patterns: words removed, words added, length change direction, punctuation changes, emoji additions/removals. These diffs feed into a weekly Voice Fingerprint update job that adjusts formality, length preference, and signature phrase lists automatically. No manual tagging required.</div>
+          <div class="task-tags"><span class="tag tag-dev">Dev</span><span class="tag tag-ai">AI</span><span class="tag tag-critical">Critical path</span></div>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-num">6.2</div>
+        <div class="task-body">
+          <div class="task-title">Build the approved post sample store</div>
+          <div class="task-desc">Every post the user approves without any edits is stored verbatim in the "running approved samples" field (rolling window of last 5). Once this field has 5+ entries, these samples should be weighted more heavily in the generation prompt than the original Q4 voice sample — they represent the most calibrated version of the brand voice to date. Update the generation prompt logic to detect when this field is populated and shift weighting accordingly.</div>
+          <div class="task-tags"><span class="tag tag-dev">Dev</span><span class="tag tag-ai">AI</span></div>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-num">6.3</div>
+        <div class="task-body">
+          <div class="task-title">Build rejection pattern detection</div>
+          <div class="task-desc">When a user rejects a post outright (no edits, just decline), log the content type, angle, structural pattern, and tone of that post. After 3+ rejections with a shared attribute, auto-add a soft guardrail to the profile (flagged as system-derived, lower confidence than user-stated guardrails). Surface these to the user in the profile confirmation screen for approval — don't silently add hard constraints.</div>
+          <div class="task-tags"><span class="tag tag-dev">Dev</span><span class="tag tag-ai">AI</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 7 -->
+  <div class="phase">
+    <div class="phase-header" onclick="toggle(this)">
+      <span class="phase-badge" style="background:#F4C0D1;color:#72243E;">Phase 7</span>
+      <span class="phase-title">Opening screen + emotional arc polish</span>
+      <span class="phase-meta">Days 12–14 · After core systems are stable</span>
+      <span class="phase-chevron open">▾</span>
+    </div>
+    <div class="phase-body">
+      <div class="phase-goal">Goal: The emotional arc from anticipation through relief must be designed deliberately. Every screen is tested against the question: does this feel like a conversation or a form? Fix anything that feels like a form.</div>
+
+      <div class="section-label">Tasks</div>
+
+      <div class="task">
+        <div class="task-num">7.1</div>
+        <div class="task-body">
+          <div class="task-title">Write and test the opening screen copy</div>
+          <div class="task-desc">The opening screen must: set anticipation, signal this is different, be specific about what KratorAI will learn, avoid the words "setup", "steps", "form", and "complete". The very first interaction is: "Before we start — what's your name, and what's the name of your business?" This is the first voice mode activation. Low stakes, just a name. Sets the tone before anything demanding is asked.</div>
+          <div class="task-tags"><span class="tag tag-design">Design</span><span class="tag tag-product">Product</span></div>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-num">7.2</div>
+        <div class="task-body">
+          <div class="task-title">Run the full onboarding with 5 real business owners</div>
+          <div class="task-desc">Not internal team members. Real business owners from your target market. Watch where they hesitate, where they seem confused, where they skip or give short answers. Every hesitation is a friction point in the design. Every short answer is a question that failed to unlock depth. Fix before launch. The bar for each question: the user gives a specific, personal answer that you could not have guessed without knowing their business.</div>
+          <div class="task-tags"><span class="tag tag-product">Product</span><span class="tag tag-critical">Critical path</span></div>
+        </div>
+      </div>
+
+      <div class="task">
+        <div class="task-num">7.3</div>
+        <div class="task-body">
+          <div class="task-title">Design and test the first automated post notification</div>
+          <div class="task-desc">The moment the first post publishes automatically, the user receives a notification. The copy: "Your first post just went live on [platform]. KratorAI did that while you were busy doing everything else." This is the final wow moment in the arc. It must arrive at the moment of publishing — not batched, not delayed. The post it publishes first should be the highest-confidence post in the calendar — the one most strongly reflecting the brand profile. This is a deliberate choice, not chronological.</div>
+          <div class="task-tags"><span class="tag tag-dev">Dev</span><span class="tag tag-design">Design</span><span class="tag tag-product">Product</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function toggle(header) {
+  const body = header.nextElementSibling;
+  const chevron = header.querySelector('.phase-chevron');
+  const isOpen = !body.classList.contains('collapsed');
+  if (isOpen) {
+    body.classList.add('collapsed');
+    chevron.classList.remove('open');
+  } else {
+    body.classList.remove('collapsed');
+    chevron.classList.add('open');
+  }
+}
+</script>
